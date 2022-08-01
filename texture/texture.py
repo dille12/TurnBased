@@ -9,7 +9,6 @@ def load_images(game, size_conversion):
 
         mypath = os.path.abspath(os.getcwd()) + f"/texture/{path}/"
         onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
-        print(onlyfiles)
 
         for x in onlyfiles:
             if path == "sprites":
