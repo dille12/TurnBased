@@ -13,15 +13,17 @@ def cam_movement(game):
         game.camera_pos_target = core.func.minus(game.camera_pos_target, core.func.minus(game.cam_origin, game.mouse_pos, op = "-"))
         game.cam_origin = game.mouse_pos.copy()
 
+    camera_movement = 30
+    if game.mouse_pos[0] > game.resolution[0] - 10:
+        game.camera_pos_target[0] += camera_movement
+    elif game.mouse_pos[0] < 10:
+        game.camera_pos_target[0] -= camera_movement
 
-    # if "d" in game.keypress:
-    #     game.camera_pos_target[0] += 500
-    # if "a" in game.keypress:
-    #     game.camera_pos_target[0] -= 500
-    # if "s" in game.keypress:
-    #     game.camera_pos_target[1] += 500
-    # if "w" in game.keypress:
-    #     game.camera_pos_target[1] -= 500
+    if game.mouse_pos[1] > game.resolution[1] - 10:
+        game.camera_pos_target[1] += camera_movement
+    elif game.mouse_pos[1] < 10:
+        game.camera_pos_target[1] -= camera_movement
 
+    camera_panning = 0.15
 
-    game.camera_pos = core.func.minus(game.camera_pos, core.func.minus(core.func.minus(game.camera_pos_target, game.camera_pos, op = "-"), [0.45,0.45], op="*"))
+    game.camera_pos = core.func.minus(game.camera_pos, core.func.minus(core.func.minus(game.camera_pos_target, game.camera_pos, op = "-"), [camera_panning,camera_panning], op="*"))

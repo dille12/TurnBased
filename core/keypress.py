@@ -50,3 +50,7 @@ def key_press_manager(obj):
                 obj.keypress.remove(sign)
             if sign in obj.keypress_held_down:
                 obj.keypress_held_down.remove(sign)
+
+
+    if "mouse0" in obj.keypress:
+        obj.sounds["click"].play()

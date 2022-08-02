@@ -36,6 +36,10 @@ class Game:
         self.terminal = {}
         self.size_conv = [1920/resolution[0], 1080/resolution[1]]
 
+        self.camera_pos = [0,0]
+        self.prev_pos = [0,0]
+        self.camera_pos_target = [0,0]
+
         self.player_team = blue_t
 
         self.qsc = 1920/resolution[0]
@@ -65,9 +69,7 @@ class Game:
             self.render_layers["1.BOTTOM"].append(Wall(self,BLACK,"Wall",x))
 
 
-        self.camera_pos = [0,0]
-        self.prev_pos = [0,0]
-        self.camera_pos_target = [0,0]
+
         self.keypress = []
         self.keypress_held_down = []
         self.cam_moving = False
@@ -79,10 +81,16 @@ class Game:
         #return minus(pos,self.camera_pos, op = "-")
         return minus(minus(pos,self.camera_pos, op = "-"),self.size_conv, op = "/")
 
-    def gen_object(self, type, team, slot):
-        print("Generating in", slot)
-        if type == "Soldier":
-            self.render_layers["4.NPCS"].append(Soldier(self, team, slot))
+
+    def get_pos_rev(self, pos):
+        return minus(minus(pos,self.camera_pos, op = "+"),self.size_conv, op = "/")
+
+
+    def gen_object(self, type):
+        
+
+        self.render_layers["3.BUILDINGS"].append(type.copy())
+
 
     def renderobjects(self):
 
@@ -134,6 +142,9 @@ class Game:
     def loop(self):
         key_press_manager(self)
         cam_movement(self)
+
+
+
         self.delta = np.array(self.prev_pos) - np.array(self.camera_pos)
         self.prev_pos = self.camera_pos.copy()
 

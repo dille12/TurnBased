@@ -26,8 +26,18 @@ class Game_Object:
         self.shots = 1
 
 
+
+
+
+
     def slot_to_pos(self):
         return self.game_ref.get_pos([self.slot[0] * 100, self.slot[1] * 100])
+
+    def pos_to_slot(self, pos):
+        return [round(pos[0]/100-0.5), round(pos[1]/100-0.5)]
+
+
+
 
     def check_mode(self):
         print("Checking")
@@ -85,10 +95,10 @@ class Game_Object:
 
 
     def purchase(self, type):
-
         rand_spots = self.scan_a_random_spot()
         slot = core.func.pick_random_from_list(rand_spots)
-        self.game_ref.gen_object(type, self.team, slot)
+        type.slot = slot
+        self.game_ref.gen_object(type)
 
     def kill(self):
         for x in self.game_ref.render_layers.keys():
@@ -120,6 +130,11 @@ class Game_Object:
             self.game_ref.screen.blit(self.image, [x,y])
 
 
+
+
+
+
+
     def rotate(self, target):
 
         angle = math.degrees(math.atan2(self.pos, target))
@@ -135,7 +150,7 @@ class Game_Object:
 
         if x < self.game_ref.mouse_pos[0] < x + self.size[0] and y < self.game_ref.mouse_pos[1] < y + self.size[1] and "mouse0" in self.game_ref.keypress:
             print("CLICKED")
-            self.game_ref.sounds["select1"].play()
+
             if not self.active:
                 self.activate()
                 self.deactivate_other()
@@ -152,10 +167,13 @@ class Game_Object:
 
     def activate(self, boolean = True):
         if not boolean:
+            self.build = None
             if self.game_ref.activated_object == self:
                 self.game_ref.activated_object = None
         else:
             self.center()
+            self.select_sound.stop()
+            self.select_sound.play()
             if self.range != 0:
                 self.scan_enemies()
             self.game_ref.activated_object = self

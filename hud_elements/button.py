@@ -25,7 +25,7 @@ class Button:
         if (core.func.point_inside(self.game_ref.mouse_pos, [self.x*100*self.game_ref.qsc,self.y*100*self.game_ref.qsc], [100*self.game_ref.qsc,100*self.game_ref.qsc]) and "mouse0" in self.game_ref.keypress) or self.key_press in self.game_ref.keypress:
             print("CLICK")
 
-            self.game_ref.sounds["menu1"].play()
+            #self.game_ref.sounds["menu1"].play()
             if self.oneshot:
                 self.oneshot_func(self.argument)
             else:

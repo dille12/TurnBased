@@ -15,8 +15,14 @@ class Building(Game_Object):
         self.image = image
         self.cable = None
         self.static_cables = []
+
+        self.c_building = False
+
         if self.image != None:
-            self.image = colorize_alpha(image, pygame.Color(self.team.color[0], self.team.color[1], self.team.color[2]), 50)
+            self.image = colorize_alpha(image.copy(), pygame.Color(self.team.color[0], self.team.color[1], self.team.color[2]), 50)
+
+            self.placeable =colorize_alpha(image.copy(), pygame.Color(0, 255, 0), 120)
+            self.unplaceable = colorize_alpha(image.copy(), pygame.Color(255, 0, 0), 120)
 
 
 
@@ -27,6 +33,7 @@ class Building(Game_Object):
         if "mouse1" in self.game_ref.keypress:
             if point_inside(self.game_ref.mouse_pos, [x,y], self.size):
                 if self.cable == None and self.active == True:
+                    self.game_ref.sounds["cable_s"].play()
                     self.cable = Cable(self.game_ref, self.team.color, self.game_ref.GT)
                     self.cable.generate([x,y], self.game_ref.mouse_pos, 45,3)
                 else:
@@ -61,7 +68,7 @@ class Building(Game_Object):
                 for obj in self.game_ref.render_layers["3.BUILDINGS"]:
                     if obj != self and obj.team == self.team and point_inside(self.game_ref.mouse_pos, obj.slot_to_pos(), obj.size):
                         self.cable = None
-
+                        self.game_ref.sounds["cable_e"].play()
 
                         cable_temp = Cable(self.game_ref, self.team.color, self.game_ref.GT)
                         cable_temp.generate(self.slot_to_pos_c_cam(), obj.slot_to_pos_c_cam(), 0,3)
@@ -69,12 +76,24 @@ class Building(Game_Object):
                         print("Created static cable")
                         break
 
+    def render_buildable(self, occ_slots):
+        x, y = self.slot_to_pos()
+        if self.slot in occ_slots:
+            pygame.draw.rect(self.game_ref.screen, [255,0,0], [x+5, y+5, self.size[0]-10, self.size[1]-10], 4)
+            self.game_ref.screen.blit(self.unplaceable, [x,y])
+            self.able_to_place = False
+        else:
+            pygame.draw.rect(self.game_ref.screen, [0,255,0], [x+5, y+5, self.size[0]-10, self.size[1]-10], 4)
+            self.game_ref.screen.blit(self.placeable, [x,y])
+            self.able_to_place = True
+
+            
 
 
 
-
-
-
+    def tick_buildable(self, occ_slots):
+        self.slot = self.pos_to_slot(self.game_ref.get_pos_rev(self.game_ref.mouse_pos))
+        self.render_buildable(occ_slots)
 
 
 
