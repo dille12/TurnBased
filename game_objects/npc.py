@@ -2,11 +2,12 @@ import pygame
 from game_objects.game_object import Game_Object
 from core.func import *
 from core.image_transform import *
+from hud_elements.button import *
 
 class NPC(Game_Object):
     def __init__(self, game, team, name, slot, movement_range = 3, hp = 100, image = None):
         super().__init__(game,team, name = name, slot = slot, hp = hp)
-
+        self.type = "npc"
         self.movement_range = movement_range
         self.turn_movement = movement_range
         self.routes = []
@@ -16,7 +17,14 @@ class NPC(Game_Object):
         self.image = image
         if self.image != None:
             print(team)
-            self.image = colorize_alpha(image, pygame.Color(team[0], team[1], team[2]), 100)
+            self.image = colorize_alpha(image, pygame.Color(team[0], team[1], team[2]), 50)
+
+
+        self.buttons = [
+        Button(self.game_ref, self, 0.5,9, self.team, self.game_ref.images["leg"], active = True),
+        Button(self.game_ref, self, 2,9, self.team, self.game_ref.images["fist"]),
+        Button(self.game_ref, self, 3.5,9, self.team, self.game_ref.images["shield"])
+        ]
 
 
 
@@ -64,3 +72,5 @@ class NPC(Game_Object):
 
 
         self.render()
+
+        self.tick_buttons()

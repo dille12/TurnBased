@@ -4,12 +4,15 @@ import core.func
 import time
 import math
 
+
 class Game_Object:
-    def __init__(self, game, team, name="obj", slot=None, hp = 100):
+    def __init__(self, game, team, name="obj", slot=None, hp = 100, size = [1,1]):
         self.name = name
         self.slot = slot
         self.game_ref = game
-        self.size = [1,1]
+        self.size = [100*(size[0]), 100*(size[1])]
+        self.slot_size = size
+
         self.active = False
         self.route_to_pos = [[0,0]]
         self.team = team
@@ -19,17 +22,41 @@ class Game_Object:
     def slot_to_pos(self):
         return self.game_ref.get_pos([self.slot[0] * 100, self.slot[1] * 100])
 
+    def scan_a_random_spot(self):
+        free_spots = []
+        end_points = self.scan_movement(2)
+        for x in end_points:
+            free_spots.append(x[-1])
+        return free_spots
+
+
+
+    def purchase(self, type):
+
+        rand_spots = self.scan_a_random_spot()
+        slot = core.func.pick_random_from_list(rand_spots)
+        self.game_ref.gen_object(type, self.team, slot)
+
+
+
+    def slot_to_pos_center(self):
+        return [self.slot[0] * 100 + self.size[0]/2, self.slot[1] * 100 + self.size[1]/2]
+
+    def slot_to_pos_c_cam(self):
+        return self.game_ref.get_pos([self.slot[0] * 100 + self.size[0]/2, self.slot[1] * 100 + self.size[1]/2])
+
+
     def slot_to_pos_c(self, slot):
         return self.game_ref.get_pos([slot[0] * 100, slot[1] * 100])
 
     def render(self):
         x, y = self.slot_to_pos()
         if self.active:
-            pygame.draw.rect(self.game_ref.screen, self.team, [x+5, y+5, 90 * self.size[0], 90 * self.size[1]], 4)
-            core.func.render_text(self.game_ref, self.name, [x+50, y-20], 20, centerx = True, color = self.team)
-            core.func.render_text(self.game_ref, f"HP:{self.hp}", [x+50, y+100], 20, centerx = True, color = self.team)
+            pygame.draw.rect(self.game_ref.screen, self.team, [x+5, y+5, self.size[0]-10, self.size[1]-10], 4)
+            core.func.render_text(self.game_ref, self.name, [x+self.size[0]/2, y-20], 20, centerx = True, color = self.team)
+            core.func.render_text(self.game_ref, f"HP:{self.hp}", [x+self.size[0]/2, y+self.size[1]+20], 20, centerx = True, color = self.team)
         else:
-            pygame.draw.rect(self.game_ref.screen, self.team, [x+5, y+5, 90 * self.size[0], 90 * self.size[1]], 1)
+            pygame.draw.rect(self.game_ref.screen, self.team, [x+5, y+5, self.size[0]-10, self.size[1]-10], 1)
         if self.image != None:
             self.game_ref.screen.blit(self.image, [x,y])
 
@@ -47,7 +74,7 @@ class Game_Object:
     def click(self):
         x,y = self.slot_to_pos()
 
-        if x < self.game_ref.mouse_pos[0] < x + 100*self.size[0] and y < self.game_ref.mouse_pos[1] < y + 100*self.size[1] and "mouse0" in self.game_ref.keypress:
+        if x < self.game_ref.mouse_pos[0] < x + self.size[0] and y < self.game_ref.mouse_pos[1] < y + self.size[1] and "mouse0" in self.game_ref.keypress:
             print("CLICKED")
             self.game_ref.sounds["select1"].play()
             if not self.active:
@@ -69,6 +96,7 @@ class Game_Object:
             if self.game_ref.activated_object == self:
                 self.game_ref.activated_object = None
         else:
+            self.center()
             self.game_ref.activated_object = self
         self.active = boolean
 
@@ -114,7 +142,13 @@ class Game_Object:
                     pygame.draw.rect(self.game_ref.screen, core.func.mult(self.team, 0.5), [x+10, y+10, 80,80],5)
 
 
+    def center(self):
+        self.game_ref.camera_pos_target = core.func.minus(self.slot_to_pos_center(),core.func.mult(self.game_ref.resolution,0.5), op="-")
 
+    def tick_buttons(self):
+        if self.active:
+            for x in self.buttons:
+                x.tick()
 
 
     def scan_movement(self, movement_range):
