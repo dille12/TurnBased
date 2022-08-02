@@ -1,9 +1,13 @@
 import pygame
 import random
+from values import *
 
 
-def print_s(game, text_str,slot, color = [255,255,255]):
+def print_s(game, text_str,slot, color = [255,255,255], highlight = False):
     text = game.terminal[30].render(str(text_str), False, color)
+
+
+
     game.screen.blit(text, (game.resolution[0] - 10 - text.get_rect().size[0], slot*30)) #
 
 def render_text(game, string, pos, font_size, centerx = False, centery = False, color = [255,255,255]):

@@ -3,7 +3,7 @@ import core.func
 import pygame
 
 class Button:
-    def __init__(self, game, obj ,slotx, sloty, team, image, oneshot = False, oneshot_func = None, active = False, argument = None):
+    def __init__(self, game, obj ,slotx, sloty, team, image, activator = "", oneshot = False, oneshot_func = None, active = False, argument = None, key_press = ""):
         self.x = slotx
         self.y = sloty
         self.game_ref = game
@@ -16,12 +16,15 @@ class Button:
         self.oneshot_func = oneshot_func
         self.active = active
         self.argument = argument
+        self.activator = activator
+        self.key_press = key_press
 
 
     def tick(self):
 
-        if core.func.point_inside(self.game_ref.mouse_pos, [self.x*100*self.game_ref.qsc,self.y*100*self.game_ref.qsc], [100*self.game_ref.qsc,100*self.game_ref.qsc]) and "mouse0" in self.game_ref.keypress:
+        if (core.func.point_inside(self.game_ref.mouse_pos, [self.x*100*self.game_ref.qsc,self.y*100*self.game_ref.qsc], [100*self.game_ref.qsc,100*self.game_ref.qsc]) and "mouse0" in self.game_ref.keypress) or self.key_press in self.game_ref.keypress:
             print("CLICK")
+
             self.game_ref.sounds["menu1"].play()
             if self.oneshot:
                 self.oneshot_func(self.argument)
@@ -32,6 +35,8 @@ class Button:
                     for x in self.parent_ref.buttons:
                         if x != self:
                             x.active = False
+
+            self.parent_ref.check_mode()
 
 
 

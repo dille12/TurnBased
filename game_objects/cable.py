@@ -5,7 +5,7 @@ from core.func import *
 
 
 class Cable(Game_Object):
-    def __init__(self, game, team, game_tick):
+    def __init__(self, game, team, game_tick, start_obj = None, end_obj = None):
         self.points = []
         self.sticks = []
         self.game_tick = game_tick(30)
@@ -13,6 +13,7 @@ class Cable(Game_Object):
         self.camera_pos = np.array([0,0])
         self.game_ref = game
         self.slot_size = [0,0]
+        self.slot = [-1,-1]
 
 
     def tick(self):
@@ -49,6 +50,8 @@ class Cable(Game_Object):
         for point in self.points:
 
             if not point.locked:
+                point.pos += self.camera_pos
+                point.prevpos += self.camera_pos
                 pos_before = point.pos.copy()
                 point.pos += point.pos - point.prevpos
 

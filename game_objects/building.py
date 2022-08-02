@@ -16,13 +16,9 @@ class Building(Game_Object):
         self.cable = None
         self.static_cables = []
         if self.image != None:
-            print(team)
-            self.image = colorize_alpha(image, pygame.Color(team[0], team[1], team[2]), 50)
+            self.image = colorize_alpha(image, pygame.Color(self.team.color[0], self.team.color[1], self.team.color[2]), 50)
 
-        self.buttons = [
-        #Button(self.game_ref, self, 0.5,9, self.team, self.game_ref.images["leg"], oneshot = True, oneshot_func = create_cable, )
-        Button(self.game_ref, self, 0.5,1, self.team, self.game_ref.images["homo"], oneshot = True, oneshot_func = self.purchase, argument = "Soldier")
-        ]
+
 
 
 
@@ -31,7 +27,7 @@ class Building(Game_Object):
         if "mouse1" in self.game_ref.keypress:
             if point_inside(self.game_ref.mouse_pos, [x,y], self.size):
                 if self.cable == None and self.active == True:
-                    self.cable = Cable(self.game_ref, self.team, self.game_ref.GT)
+                    self.cable = Cable(self.game_ref, self.team.color, self.game_ref.GT)
                     self.cable.generate([x,y], self.game_ref.mouse_pos, 45,3)
                 else:
                     self.cable = None
@@ -42,11 +38,11 @@ class Building(Game_Object):
             # else:
             #
             #     for obj in self.game_ref.render_layers["3.BUILDINGS"]:
-            #         if obj.team == self.team and point_inside(self.game_ref.mouse_pos, obj.slot_to_pos(), obj.size):
+            #         if obj.team == self.team.color and point_inside(self.game_ref.mouse_pos, obj.slot_to_pos(), obj.size):
             #             self.cable = None
             #
             #
-            #             cable_temp = Cable(self.team, self.game_ref.GT)
+            #             cable_temp = Cable(self.team.color, self.game_ref.GT)
             #             cable_temp.generate(self.slot_to_pos(), obj.slot_to_pos(), 45,3)
             #             self.static_cables.append(cable_temp)
             #             print("Created static cable")
@@ -67,8 +63,8 @@ class Building(Game_Object):
                         self.cable = None
 
 
-                        cable_temp = Cable(self.game_ref, self.team, self.game_ref.GT)
-                        cable_temp.generate(self.slot_to_pos_c_cam(), obj.slot_to_pos_c_cam(), 10,3)
+                        cable_temp = Cable(self.game_ref, self.team.color, self.game_ref.GT)
+                        cable_temp.generate(self.slot_to_pos_c_cam(), obj.slot_to_pos_c_cam(), 0,3)
                         self.game_ref.render_layers["5.CABLE"].append(cable_temp)
                         print("Created static cable")
                         break

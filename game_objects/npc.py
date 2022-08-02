@@ -16,15 +16,13 @@ class NPC(Game_Object):
         self.target = None
         self.image = image
         if self.image != None:
-            print(team)
-            self.image = colorize_alpha(image, pygame.Color(team[0], team[1], team[2]), 50)
+            self.image = colorize_alpha(image, pygame.Color(self.team.color[0], self.team.color[1], self.team.color[2]), 50)
 
 
-        self.buttons = [
-        Button(self.game_ref, self, 0.5,9, self.team, self.game_ref.images["leg"], active = True),
-        Button(self.game_ref, self, 2,9, self.team, self.game_ref.images["fist"]),
-        Button(self.game_ref, self, 3.5,9, self.team, self.game_ref.images["shield"])
-        ]
+
+        self.check_mode()
+
+
 
 
 
@@ -56,16 +54,28 @@ class NPC(Game_Object):
         if self.moving_route == []:
             self.click()
 
-        if self.active and "mouse0" in self.game_ref.keypress:
-            self.routes = self.scan_movement(self.turn_movement)
+        if self.mode == "walk":
 
-        if self.active:
+            if self.active and "mouse0" in self.game_ref.keypress:
+                self.routes = self.scan_movement(self.turn_movement)
 
-            self.render_routes()
+            if self.active:
+                self.render_routes()
+
+        elif self.mode == "attack" and self.active and self.shots > 0:
+            x,y = self.slot_to_pos_c(minus(self.slot,[-self.range, -self.range]))
+            size = (1 + self.range * 2) * self.game_ref.ss
 
 
-            if "esc" in self.game_ref.keypress:
-                self.activate(False)
+            pygame.draw.rect(self.game_ref.screen, [255,0,0], [x,y,size,size],2)
+
+            self.highlight_enemies()
+
+
+
+
+        if "esc" in self.game_ref.keypress:
+            self.activate(False)
 
         if self.moving_route != []:
             self.move()
