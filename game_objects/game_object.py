@@ -19,6 +19,8 @@ class Game_Object:
         self.hp = hp
         self.buttons = []
         self.mode = ""
+        self.build_queue = []
+        self.c_build_time = 0
 
 
 
@@ -65,7 +67,7 @@ class Game_Object:
 
     def scan_enemies(self):
         self.shootables = []
-        for x in (x for x in self.game_ref.return_objects() if x.team != self.team and x.team != BLACK and self.in_range(x)):
+        for x in (x for x in self.game_ref.return_objects(["3.BUILDINGS", "4.NPCS"]) if x.team != self.team and x.team != BLACK and self.in_range(x)):
             self.shootables.append(x)
 
 
@@ -88,13 +90,33 @@ class Game_Object:
                     if obj.hp <= 0:
                         obj.kill()
 
+    def tick_queue(self):
 
+        if self.build_queue != [] and self.c_build_time == 0:
+            self.generate(self.build_queue[0])
+            self.build_queue.remove(self.build_queue[0])
+            if self.build_queue != []:
+                self.c_build_time = self.build_queue[0].buildtime
 
-
-
+        if self.build_queue != [] and self.active:
+            x_pos = -50
+            i = 0
+            for x in self.build_queue:
+                x_pos += 100
+                self.game_ref.screen.blit(x.image if i == 0 else x.image_bg, [x_pos, 900])
+                i += 1
+            pygame.draw.rect(self.game_ref.screen, self.team.color, [50,900,100,100],2)
+            core.func.render_text(self.game_ref, self.c_build_time, [55,905],50, color = self.team.color)
 
 
     def purchase(self, type):
+        if len(self.build_queue) < 5:
+            self.build_queue.append(type)
+            if len(self.build_queue) == 1:
+                self.c_build_time = type.buildtime
+
+
+    def generate(self, type):
         rand_spots = self.scan_a_random_spot()
         slot = core.func.pick_random_from_list(rand_spots)
         type.slot = slot
@@ -128,6 +150,17 @@ class Game_Object:
             pygame.draw.rect(self.game_ref.screen, self.team.color, [x+5, y+5, self.size[0]-10, self.size[1]-10], 1)
         if self.image != None:
             self.game_ref.screen.blit(self.image, [x,y])
+
+        if hasattr(self, "turn_movement"):
+            for x_1 in range(self.turn_movement):
+                pygame.draw.rect(self.game_ref.screen, self.team.color, [x+5+x_1*round(93/self.movement_range), y+5+92, round(93/self.movement_range)-3, 6])
+
+        if hasattr(self, "turn_movement"):
+            for x_1 in range(self.shots):
+                pygame.draw.rect(self.game_ref.screen, [255,0,0], [x+5+x_1*round(93/self.shots), y+5+100, round(93/self.shots_per_round)-3, 6])
+
+
+
 
 
 

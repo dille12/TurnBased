@@ -5,6 +5,7 @@ from game_objects.game_object import *
 from game_objects.npc import *
 from game_objects.building import *
 from game_objects.wall import *
+from game_objects.deposit import *
 from values import *
 import sys
 from core.keypress import *
@@ -14,6 +15,7 @@ from core.map_gen import *
 import numpy as np
 from game_objects.objects import *
 from core.player import Player
+from hud_elements.button import *
 
 
 class Game:
@@ -54,7 +56,7 @@ class Game:
 
         self.clock = pygame.time.Clock()
 
-        tiles = gen_map(self.images["layout"])
+        tiles, self.deposits = gen_map(self.images["layout"])
 
         self.render_layers = {"1.BOTTOM" : [], "2.ORE" : [], "3.BUILDINGS" : [], "4.NPCS" : [], "5.CABLE" : [], "6.HUD" : []}
         #self.render_layers["3.BUILDINGS"].append(Building(self,GREEN,"Base",[3,3], image = self.images["base"].copy(), size = [2,2]))
@@ -62,13 +64,16 @@ class Game:
         self.render_layers["3.BUILDINGS"].append(ElectricTower(self, blue_t, [5,2]))
         self.render_layers["3.BUILDINGS"].append(ElectricTower(self, blue_t, [9,2]))
 
-        self.render_layers["4.NPCS"].append(Builder(self, blue_t, [0,0]))
+        self.render_layers["4.NPCS"].append(Builder(self, blue_t, [3,2]))
+
+        for x in self.deposits:
+            self.render_layers["1.BOTTOM"].append(Deposit(self,nature,"Wall",x))
 
 
         for x in tiles:
-            self.render_layers["1.BOTTOM"].append(Wall(self,BLACK,"Wall",x))
+            self.render_layers["1.BOTTOM"].append(Wall(self,nature,"Wall",x))
 
-
+        self.next_turn_button = Button(self, self, 17,9, self.player_team.color, self.images["nextturn"], oneshot = "walk", oneshot_func = self.next_turn)
 
         self.keypress = []
         self.keypress_held_down = []
@@ -85,11 +90,27 @@ class Game:
     def get_pos_rev(self, pos):
         return minus(minus(pos,self.camera_pos, op = "+"),self.size_conv, op = "/")
 
+    def next_turn(self, arg):
+        for x in self.return_objects():
+            if x.team == self.player_team:
+                if hasattr(x, "turn_movement"):
+                    x.turn_movement = x.movement_range
+                if hasattr(x, "shots"):
+                    x.shots = x.shots_per_round
+
+                if x.c_build_time > 0:
+                    x.c_build_time -= 1
+
 
     def gen_object(self, type):
-        
 
-        self.render_layers["3.BUILDINGS"].append(type.copy())
+        if type.type == "npc":
+
+            self.render_layers["4.NPCS"].append(type.copy())
+
+        else:
+
+            self.render_layers["3.BUILDINGS"].append(type.copy())
 
 
     def renderobjects(self):
@@ -102,9 +123,13 @@ class Game:
 
 
 
-    def return_objects(self):
+    def return_objects(self, list = None):
         objects = []
-        for x in self.render_layers.keys():
+
+        if list == None:
+            list = self.render_layers.keys()
+
+        for x in list:
             for obj in self.render_layers[x]:
                 objects.append(obj)
 
@@ -120,7 +145,7 @@ class Game:
             for obj in self.render_layers[x]:
                 for x in range(obj.slot_size[0]):
                     for y in range(obj.slot_size[1]):
-                        if core.func.minus(obj.slot,[x,y]) not in slots:
+                        if core.func.minus(obj.slot,[x,y]) not in slots and obj.type != "deposit":
                             slots.append(core.func.minus(obj.slot,[x,y]))
         return slots
 
@@ -152,6 +177,7 @@ class Game:
         self.screen.fill(BLACK)
         self.renderobjects()
         self.draw_HUD()
+        self.next_turn_button.tick()
 
         print_s(self, f"FPS:{self.fps}", 1)
 

@@ -14,6 +14,7 @@ class Soldier(NPC):
         image = game.images["soldier"].copy()
         movement_range = 3
         self.range = 2
+        self.buildtime = 3
 
         self.select_sound = game.sounds["select_sold"]
 
@@ -37,6 +38,7 @@ class Builder(NPC):
         image = game.images["builder"].copy()
         movement_range = 3
         self.range = 1
+        self.buildtime = 2
 
         self.select_sound = game.sounds["select_builder"]
 
@@ -46,7 +48,8 @@ class Builder(NPC):
         self.buttons = [
         Button(self.game_ref, self, 0.5,9, self.team.color, self.game_ref.images["leg"], activator = "walk", active = True, key_press = "a"),
         Button(self.game_ref, self, 2,9, self.team.color, self.game_ref.images["fist"], activator = "attack", key_press = "s"),
-        Button(self.game_ref, self, 0.5,2, self.team.color, self.game_ref.images["elec_tower"], oneshot = True, oneshot_func = self.npc_build, argument = ElectricTower(self.game_ref, self.team, [-1,-1]))
+        Button(self.game_ref, self, 0.5,2, self.team.color, self.game_ref.images["elec_tower"], oneshot = True, oneshot_func = self.npc_build, argument = ElectricTower(self.game_ref, self.team, [-1,-1])),
+        Button(self.game_ref, self, 0.5,3.5, self.team.color, self.game_ref.images["energywell"], oneshot = True, oneshot_func = self.npc_build, argument = EnergyWell(self.game_ref, self.team, [-1,-1]))
         # Button(self.game_ref, self, 3.5,9, self.team.color, self.game_ref.images["shield"], activator = "defend", key_press = "d")
         ]
         self.check_mode()
@@ -60,6 +63,7 @@ class Base(Building):
         name = "Base"
 
         self.select_sound = game.sounds["select_base"]
+        self.buildtime = 1
 
         print("BASE: type", type(self).__dict__)
 
@@ -88,8 +92,24 @@ class ElectricTower(Building):
         self.select_sound = game.sounds["select_tower"]
         size = [1,1]
         self.range = 0
+        self.buildtime = 1
 
         super().__init__(game, team, name, slot, size = size, hp = hp, image = image)
 
     def copy(self):
         return ElectricTower(self.game_ref, self.team, self.slot)
+
+class EnergyWell(Building):
+    def __init__(self, game, team, slot):
+        hp = 200
+        name = "Energy Well"
+        image = game.images["energywell"].copy()
+        self.select_sound = game.sounds["select_tower"]
+        size = [1,1]
+        self.range = 0
+        self.buildtime = 3
+
+        super().__init__(game, team, name, slot, size = size, hp = hp, image = image)
+
+    def copy(self):
+        return EnergyWell(self.game_ref, self.team, self.slot)

@@ -18,11 +18,12 @@ class Button:
         self.argument = argument
         self.activator = activator
         self.key_press = key_press
+        self.button_sizex, self.button_sizey = self.image.get_size()
 
 
     def tick(self):
 
-        if (core.func.point_inside(self.game_ref.mouse_pos, [self.x*100*self.game_ref.qsc,self.y*100*self.game_ref.qsc], [100*self.game_ref.qsc,100*self.game_ref.qsc]) and "mouse0" in self.game_ref.keypress) or self.key_press in self.game_ref.keypress:
+        if (core.func.point_inside(self.game_ref.mouse_pos, [self.x*100*self.game_ref.qsc,self.y*100*self.game_ref.qsc], [self.button_sizex*self.game_ref.qsc,self.button_sizey*self.game_ref.qsc]) and "mouse0" in self.game_ref.keypress) or self.key_press in self.game_ref.keypress:
             print("CLICK")
 
             #self.game_ref.sounds["menu1"].play()
@@ -35,8 +36,11 @@ class Button:
                     for x in self.parent_ref.buttons:
                         if x != self:
                             x.active = False
+            try:
 
-            self.parent_ref.check_mode()
+                self.parent_ref.check_mode()
+            except:
+                pass
 
 
 
@@ -44,8 +48,8 @@ class Button:
         if self.active:
 
             self.game_ref.screen.blit(self.image,[self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc])
-            pygame.draw.rect(self.game_ref.screen, self.team, [self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc, 100*self.game_ref.qsc, 100*self.game_ref.qsc],5)
+            pygame.draw.rect(self.game_ref.screen, self.team, [self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc, self.button_sizex*self.game_ref.qsc, self.button_sizey*self.game_ref.qsc],5)
         else:
 
             self.game_ref.screen.blit(self.image2,[self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc])
-            pygame.draw.rect(self.game_ref.screen, self.team, [self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc, 100*self.game_ref.qsc, 100*self.game_ref.qsc],1)
+            pygame.draw.rect(self.game_ref.screen, self.team, [self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc, self.button_sizex*self.game_ref.qsc, self.button_sizey*self.game_ref.qsc],1)

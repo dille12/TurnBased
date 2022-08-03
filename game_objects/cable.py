@@ -60,7 +60,7 @@ class Cable(Game_Object):
             else:
                 point.pos += self.camera_pos
 
-        for i in range(7):
+        for i in range(3):
             for stick in self.sticks:
                 stick_centre = (stick.point1.pos + stick.point2.pos) / 2
                 stick_dir = normalize(stick.point1.pos - stick.point2.pos)

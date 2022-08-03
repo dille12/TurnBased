@@ -87,18 +87,32 @@ class Building(Game_Object):
             self.game_ref.screen.blit(self.placeable, [x,y])
             self.able_to_place = True
 
-            
+    def render_buildable_energy_well(self, occ_slots):
+        x, y = self.slot_to_pos()
+        if self.slot not in occ_slots and self.slot in self.game_ref.deposits:
+            pygame.draw.rect(self.game_ref.screen, [0,255,0], [x+5, y+5, self.size[0]-10, self.size[1]-10], 4)
+            self.game_ref.screen.blit(self.placeable, [x,y])
+            self.able_to_place = True
+
+        else:
+            pygame.draw.rect(self.game_ref.screen, [255,0,0], [x+5, y+5, self.size[0]-10, self.size[1]-10], 4)
+            self.game_ref.screen.blit(self.unplaceable, [x,y])
+            self.able_to_place = False
+
+
 
 
 
     def tick_buildable(self, occ_slots):
         self.slot = self.pos_to_slot(self.game_ref.get_pos_rev(self.game_ref.mouse_pos))
-        self.render_buildable(occ_slots)
+        if self.name == "Energy Well":
+            self.render_buildable_energy_well(occ_slots)
+        else:
+            self.render_buildable(occ_slots)
 
 
 
     def tick(self):
-
         self.click()
 
 
@@ -108,5 +122,6 @@ class Building(Game_Object):
 
         self.render()
         self.tick_buttons()
+        self.tick_queue()
         self.tick_cable()
         self.create_cable()

@@ -17,7 +17,8 @@ class NPC(Game_Object):
         self.image = image
         self.build = None
         if self.image != None:
-            self.image = colorize_alpha(image, pygame.Color(self.team.color[0], self.team.color[1], self.team.color[2]), 50)
+            self.image = colorize_alpha(image.copy(), pygame.Color(self.team.color[0], self.team.color[1], self.team.color[2]), 50)
+            self.image_bg = colorize_alpha(image.copy(), pygame.Color(0,0,0), 100)
 
 
 

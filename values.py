@@ -9,6 +9,7 @@ CYAN = [51, 204, 204]
 
 blue_t = Player(BLUE, "Homo")
 red_t = Player(RED, "Runkkari")
+nature = Player(BLACK, "Nature")
 
 
 
