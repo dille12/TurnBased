@@ -21,9 +21,9 @@ class Soldier(NPC):
         super().__init__(game, team, name, slot, movement_range = movement_range, hp = hp, image = image)
 
         self.buttons = [
-        Button(self.game_ref, self, 0.5,9, self.team.color, self.game_ref.images["leg"], activator = "walk", active = True, key_press = "a"),
-        Button(self.game_ref, self, 2,9, self.team.color, self.game_ref.images["fist"], activator = "attack", key_press = "s"),
-        Button(self.game_ref, self, 3.5,9, self.team.color, self.game_ref.images["shield"], activator = "defend", key_press = "d")
+        Button(self.game_ref, self, 0.5,9, self.team.color, self.game_ref.images["leg"], activator = "walk", active = True, key_press = "z"),
+        Button(self.game_ref, self, 2,9, self.team.color, self.game_ref.images["fist"], activator = "attack", key_press = "x"),
+        Button(self.game_ref, self, 3.5,9, self.team.color, self.game_ref.images["shield"], activator = "defend", key_press = "c")
         ]
         self.check_mode()
 
@@ -46,8 +46,8 @@ class Builder(NPC):
         super().__init__(game, team, name, slot, movement_range = movement_range, hp = hp, image = image)
 
         self.buttons = [
-        Button(self.game_ref, self, 0.5,9, self.team.color, self.game_ref.images["leg"], activator = "walk", active = True, key_press = "a"),
-        Button(self.game_ref, self, 2,9, self.team.color, self.game_ref.images["fist"], activator = "attack", key_press = "s"),
+        Button(self.game_ref, self, 0.5,9, self.team.color, self.game_ref.images["leg"], activator = "walk", active = True, key_press = "z"),
+        Button(self.game_ref, self, 2,9, self.team.color, self.game_ref.images["fist"], activator = "attack", key_press = "x"),
         Button(self.game_ref, self, 0.5,2, self.team.color, self.game_ref.images["elec_tower"], oneshot = True, oneshot_func = self.npc_build, argument = ElectricTower(self.game_ref, self.team, [-1,-1])),
         Button(self.game_ref, self, 0.5,3.5, self.team.color, self.game_ref.images["energywell"], oneshot = True, oneshot_func = self.npc_build, argument = EnergyWell(self.game_ref, self.team, [-1,-1]))
         # Button(self.game_ref, self, 3.5,9, self.team.color, self.game_ref.images["shield"], activator = "defend", key_press = "d")
@@ -74,8 +74,8 @@ class Base(Building):
         super().__init__(game, team, name, slot, size = size, hp = hp, image = image)
 
         self.buttons = [
-        #Button(self.game_ref, self, 0.5,9, self.team.color, self.game_ref.images["leg"], oneshot = True, oneshot_func = create_cable, )
-        Button(self.game_ref, self, 0.5,1, self.team.color, self.game_ref.images["soldier"], oneshot = True, oneshot_func = self.purchase, argument = Soldier(self.game_ref, self.team, [-1,-1]))
+        Button(self.game_ref, self, 0.5,1, self.team.color, self.game_ref.images["builder"], oneshot = True, oneshot_func = self.purchase, argument = Builder(self.game_ref, self.team, [-1,-1])),
+        Button(self.game_ref, self, 0.5,2.5, self.team.color, self.game_ref.images["soldier"], oneshot = True, oneshot_func = self.purchase, argument = Soldier(self.game_ref, self.team, [-1,-1]))
         ]
         if self.team == self.game_ref.player_team:
             print("CENTERING IN START")

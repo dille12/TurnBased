@@ -14,4 +14,4 @@ def gen_map(image):
                 deposits.append([x,y])
 
     print(deposits)
-    return tiles, deposits
+    return size, tiles, deposits

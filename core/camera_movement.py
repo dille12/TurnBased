@@ -2,11 +2,11 @@ import pygame
 import core.func
 
 def cam_movement(game):
-    if "mouse2"in game.keypress:
+    if "mouse1"in game.keypress:
         game.cam_moving = True
         game.cam_origin = game.mouse_pos.copy()
 
-    elif not "mouse2" in game.keypress_held_down:
+    elif not "mouse1" in game.keypress_held_down:
         game.cam_moving = False
 
     if game.cam_moving:
@@ -14,14 +14,14 @@ def cam_movement(game):
         game.cam_origin = game.mouse_pos.copy()
 
     camera_movement = 30
-    if game.mouse_pos[0] > game.resolution[0] - 10:
+    if game.mouse_pos[0] > game.resolution[0] - 10 or "d" in game.keypress_held_down:
         game.camera_pos_target[0] += camera_movement
-    elif game.mouse_pos[0] < 10:
+    elif game.mouse_pos[0] < 10 or "a" in game.keypress_held_down:
         game.camera_pos_target[0] -= camera_movement
 
-    if game.mouse_pos[1] > game.resolution[1] - 10:
+    if game.mouse_pos[1] > game.resolution[1] - 10 or "s" in game.keypress_held_down:
         game.camera_pos_target[1] += camera_movement
-    elif game.mouse_pos[1] < 10:
+    elif game.mouse_pos[1] < 10 or "w" in game.keypress_held_down:
         game.camera_pos_target[1] -= camera_movement
 
     camera_panning = 0.15

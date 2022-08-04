@@ -17,6 +17,10 @@ def key_press_manager(obj):
     [pygame.K_a, "a"],
     [pygame.K_s, "s"],
     [pygame.K_d, "d"],
+    [pygame.K_x, "x"],
+    [pygame.K_c, "c"],
+    [pygame.K_z, "z"],
+
     [pygame.K_ESCAPE, "esc"]
     ]:
         if keys[key]:

@@ -26,6 +26,7 @@ class Game_Object:
 
         self.shots_per_round = 1
         self.shots = 1
+        self.act_gt = self.game_ref.GT(20, oneshot = True)
 
 
 
@@ -144,7 +145,7 @@ class Game_Object:
         x, y = self.slot_to_pos()
         if self.active:
             pygame.draw.rect(self.game_ref.screen, self.team.color, [x+5, y+5, self.size[0]-10, self.size[1]-10], 4)
-            core.func.render_text(self.game_ref, self.name, [x+self.size[0]/2, y-20], 20, centerx = True, color = self.team.color)
+            core.func.render_text(self.game_ref, self.name, [x+self.size[0]/2, y-15], 20, centerx = True, color = self.team.color)
             core.func.render_text(self.game_ref, f"HP:{self.hp}", [x+self.size[0]/2, y+self.size[1]+20], 20, centerx = True, color = self.team.color)
         else:
             pygame.draw.rect(self.game_ref.screen, self.team.color, [x+5, y+5, self.size[0]-10, self.size[1]-10], 1)
@@ -205,6 +206,7 @@ class Game_Object:
                 self.game_ref.activated_object = None
         else:
             self.center()
+            self.act_gt.value = 0
             self.select_sound.stop()
             self.select_sound.play()
             if self.range != 0:
@@ -241,7 +243,7 @@ class Game_Object:
                             pygame.draw.line(self.game_ref.screen, self.team.color, self.slot_to_pos_c(last_x_y), self.slot_to_pos_c(pos),4)
                             last_x_y = pos.copy()
 
-                        if "mouse0" in self.game_ref.keypress:
+                        if "mouse2" in self.game_ref.keypress:
                             print(self.route_to_pos)
                             self.moving_route = self.route_to_pos
                             self.activate(False)
@@ -261,6 +263,11 @@ class Game_Object:
         if self.active:
             for x in self.buttons:
                 x.tick()
+
+    def activation_smoothing(self):
+        self.act_gt.tick()
+        value = min([self.act_gt.value/self.act_gt.max_value,1])
+        self.smoothing = (1 - value)**3.5*150
 
 
     def scan_movement(self, movement_range):

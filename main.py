@@ -47,6 +47,7 @@ class Game:
         self.qsc = 1920/resolution[0]
 
         self.ss = 100 * self.qsc #SLOT SIZE
+        self.smoothing = 0
 
         self.screen = pygame.display.set_mode(resolution, pygame.FULLSCREEN)
         load_images(self ,self.size_conv)
@@ -56,7 +57,7 @@ class Game:
 
         self.clock = pygame.time.Clock()
 
-        tiles, self.deposits = gen_map(self.images["layout"])
+        self.size_slots, tiles, self.deposits = gen_map(self.images["layout"])
 
         self.render_layers = {"1.BOTTOM" : [], "2.ORE" : [], "3.BUILDINGS" : [], "4.NPCS" : [], "5.CABLE" : [], "6.HUD" : []}
         #self.render_layers["3.BUILDINGS"].append(Building(self,GREEN,"Base",[3,3], image = self.images["base"].copy(), size = [2,2]))
@@ -81,6 +82,7 @@ class Game:
         self.timedelta = 1
         self.activated_object = None
         self.fps = 0
+        self.idle = 0
 
     def get_pos(self,pos):
         #return minus(pos,self.camera_pos, op = "-")
@@ -100,6 +102,10 @@ class Game:
 
                 if x.c_build_time > 0:
                     x.c_build_time -= 1
+
+    def slot_inside(self, slot):
+        return 0 <= slot[0] < self.size_slots[0] and 0 <= slot[1] < self.size_slots[1]
+
 
 
     def gen_object(self, type):
@@ -151,11 +157,15 @@ class Game:
 
 
     def draw_HUD(self):
+
+
+
         if self.activated_object != None:
-            render_text(self, self.activated_object.name, [20,20], 60, color = self.activated_object.team.color)
+            hud_transpose = self.activated_object.smoothing
+            render_text(self, self.activated_object.name, [20,20 - hud_transpose], 60, color = self.activated_object.team.color)
             if self.activated_object.type == "npc":
-                render_text(self, f"Movement : {self.activated_object.turn_movement}/{self.activated_object.movement_range}", [20,70], 30, color = self.activated_object.team.color)
-                render_text(self, f"Mode : {self.activated_object.mode}", [20,100], 30, color = self.activated_object.team.color)
+                render_text(self, f"Movement : {self.activated_object.turn_movement}/{self.activated_object.movement_range}", [20,70 - hud_transpose], 30, color = self.activated_object.team.color)
+                render_text(self, f"Mode : {self.activated_object.mode}", [20,100 - hud_transpose], 30, color = self.activated_object.team.color)
 
 
 
@@ -180,5 +190,6 @@ class Game:
         self.next_turn_button.tick()
 
         print_s(self, f"FPS:{self.fps}", 1)
+        print_s(self, f"IDLE:{self.idle}%", 2)
 
         pygame.display.update()

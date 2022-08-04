@@ -77,8 +77,16 @@ class Building(Game_Object):
                         break
 
     def render_buildable(self, occ_slots):
+        unplaceable = False
+        for x_1 in range(self.slot_size[0]):
+            for y_1 in range(self.slot_size[1]):
+
+                if [self.slot[0] + x_1, self.slot[1] + y_1] in occ_slots or not self.game_ref.slot_inside(self.slot):
+                    unplaceable = True
+
+
         x, y = self.slot_to_pos()
-        if self.slot in occ_slots:
+        if unplaceable:
             pygame.draw.rect(self.game_ref.screen, [255,0,0], [x+5, y+5, self.size[0]-10, self.size[1]-10], 4)
             self.game_ref.screen.blit(self.unplaceable, [x,y])
             self.able_to_place = False
@@ -113,6 +121,7 @@ class Building(Game_Object):
 
 
     def tick(self):
+        self.activation_smoothing()
         self.click()
 
 

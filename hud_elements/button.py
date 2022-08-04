@@ -47,9 +47,9 @@ class Button:
 
         if self.active:
 
-            self.game_ref.screen.blit(self.image,[self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc])
-            pygame.draw.rect(self.game_ref.screen, self.team, [self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc, self.button_sizex*self.game_ref.qsc, self.button_sizey*self.game_ref.qsc],5)
+            self.game_ref.screen.blit(self.image,[self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc + self.parent_ref.smoothing])
+            pygame.draw.rect(self.game_ref.screen, self.team, [self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc + self.parent_ref.smoothing, self.button_sizex*self.game_ref.qsc, self.button_sizey*self.game_ref.qsc],5)
         else:
 
-            self.game_ref.screen.blit(self.image2,[self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc])
-            pygame.draw.rect(self.game_ref.screen, self.team, [self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc, self.button_sizex*self.game_ref.qsc, self.button_sizey*self.game_ref.qsc],1)
+            self.game_ref.screen.blit(self.image2,[self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc + self.parent_ref.smoothing])
+            pygame.draw.rect(self.game_ref.screen, self.team, [self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc + self.parent_ref.smoothing, self.button_sizex*self.game_ref.qsc, self.button_sizey*self.game_ref.qsc],1)

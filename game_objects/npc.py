@@ -63,6 +63,7 @@ class NPC(Game_Object):
 
 
     def tick(self):
+        self.activation_smoothing()
         if self.moving_route == []:
             self.click()
 
