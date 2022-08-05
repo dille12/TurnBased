@@ -24,6 +24,19 @@ def cam_movement(game):
     elif game.mouse_pos[1] < 10 or "w" in game.keypress_held_down:
         game.camera_pos_target[1] -= camera_movement
 
+
+    if game.camera_pos_target[0] <  - game.resolution[0]/2:
+        game.camera_pos_target[0] =  - game.resolution[0]/2
+    elif game.camera_pos_target[0] > game.map_size[0] - game.resolution[0]/2:
+        game.camera_pos_target[0] = game.map_size[0]  - game.resolution[0]/2
+
+    if game.camera_pos_target[1] <  - game.resolution[1]/2:
+        game.camera_pos_target[1] =  - game.resolution[1]/2
+    elif game.camera_pos_target[1] > game.map_size[1] - game.resolution[1]/2:
+        game.camera_pos_target[1] = game.map_size[1]  - game.resolution[1]/2
+
+
+
     camera_panning = 0.15
 
     game.camera_pos = core.func.minus(game.camera_pos, core.func.minus(core.func.minus(game.camera_pos_target, game.camera_pos, op = "-"), [camera_panning,camera_panning], op="*"))

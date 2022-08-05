@@ -23,8 +23,17 @@ class Button:
 
     def tick(self):
 
-        if (core.func.point_inside(self.game_ref.mouse_pos, [self.x*100*self.game_ref.qsc,self.y*100*self.game_ref.qsc], [self.button_sizex*self.game_ref.qsc,self.button_sizey*self.game_ref.qsc]) and "mouse0" in self.game_ref.keypress) or self.key_press in self.game_ref.keypress:
+        inside = core.func.point_inside(self.game_ref.mouse_pos, [self.x*100*self.game_ref.qsc,self.y*100*self.game_ref.qsc], [self.button_sizex*self.game_ref.qsc,self.button_sizey*self.game_ref.qsc])
+
+        if inside and self.argument != None:
+            core.func.render_text(self.game_ref, self.argument.name, core.func.minus(self.game_ref.mouse_pos,[100,50]), 40, color = self.team)
+            core.func.render_text(self.game_ref, self.argument.desc, core.func.minus(self.game_ref.mouse_pos,[100,100]), 20, color = self.team)
+            core.func.render_text(self.game_ref, f"Energy usage: {self.argument.energy_consumption}", core.func.minus(self.game_ref.mouse_pos,[100,130]), 30, color = self.team)
+
+        if (inside and "mouse0" in self.game_ref.keypress) or self.key_press in self.game_ref.keypress:
             print("CLICK")
+            self.game_ref.sounds["button"].stop()
+            self.game_ref.sounds["button"].play()
 
             #self.game_ref.sounds["menu1"].play()
             if self.oneshot:
@@ -43,13 +52,21 @@ class Button:
                 pass
 
 
-
-
-        if self.active:
-
-            self.game_ref.screen.blit(self.image,[self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc + self.parent_ref.smoothing])
-            pygame.draw.rect(self.game_ref.screen, self.team, [self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc + self.parent_ref.smoothing, self.button_sizex*self.game_ref.qsc, self.button_sizey*self.game_ref.qsc],5)
+        if inside:
+            color = [255,255,255]
+            image = self.image
+            width = 5
         else:
+            if self.active:
+                color = self.team
+                image = self.image
+                width = 5
+            else:
+                color = self.team
+                image = self.image2
+                width = 1
 
-            self.game_ref.screen.blit(self.image2,[self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc + self.parent_ref.smoothing])
-            pygame.draw.rect(self.game_ref.screen, self.team, [self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc + self.parent_ref.smoothing, self.button_sizex*self.game_ref.qsc, self.button_sizey*self.game_ref.qsc],1)
+        self.game_ref.screen.blit(image,[self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc + self.parent_ref.smoothing])
+        pygame.draw.rect(self.game_ref.screen, color, [self.x * 100*self.game_ref.qsc, self.y * 100*self.game_ref.qsc + self.parent_ref.smoothing, self.button_sizex*self.game_ref.qsc, self.button_sizey*self.game_ref.qsc],width)
+        if self.key_press != "":
+            core.func.render_text(self.game_ref, self.key_press.upper(), [self.x * 100*self.game_ref.qsc+5, self.y * 100*self.game_ref.qsc + self.parent_ref.smoothing+5],20, color = color)

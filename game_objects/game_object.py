@@ -3,6 +3,7 @@ from values import *
 import core.func
 import time
 import math
+import random
 
 
 class Game_Object:
@@ -21,6 +22,8 @@ class Game_Object:
         self.mode = ""
         self.build_queue = []
         self.c_build_time = 0
+        self.connected_to_base = False
+        self.los_rad = 400
 
 
 
@@ -71,6 +74,9 @@ class Game_Object:
         for x in (x for x in self.game_ref.return_objects(["3.BUILDINGS", "4.NPCS"]) if x.team != self.team and x.team != BLACK and self.in_range(x)):
             self.shootables.append(x)
 
+    def center_slot(self):
+        return [self.slot[0] + self.slot_size[0], self.slot[1] + self.slot_size[1]]
+
 
     def highlight_enemies(self):
         for obj in self.shootables:
@@ -94,27 +100,32 @@ class Game_Object:
     def tick_queue(self):
 
         if self.build_queue != [] and self.c_build_time == 0:
+
             self.generate(self.build_queue[0])
             self.build_queue.remove(self.build_queue[0])
             if self.build_queue != []:
                 self.c_build_time = self.build_queue[0].buildtime
 
         if self.build_queue != [] and self.active:
+            core.func.render_text(self.game_ref, "QUEUE:", [50,870],20, color = self.team.color)
             x_pos = -50
             i = 0
             for x in self.build_queue:
                 x_pos += 100
                 self.game_ref.screen.blit(x.image if i == 0 else x.image_bg, [x_pos, 900])
+
+
                 i += 1
             pygame.draw.rect(self.game_ref.screen, self.team.color, [50,900,100,100],2)
             core.func.render_text(self.game_ref, self.c_build_time, [55,905],50, color = self.team.color)
 
 
     def purchase(self, type):
-        if len(self.build_queue) < 5:
-            self.build_queue.append(type)
-            if len(self.build_queue) == 1:
-                self.c_build_time = type.buildtime
+        if type.energy_consumption + self.team.energy_consumption <= self.team.energy_generation:
+            if len(self.build_queue) < 10:
+                self.build_queue.append(type)
+                if len(self.build_queue) == 1:
+                    self.c_build_time = type.buildtime
 
 
     def generate(self, type):
@@ -137,13 +148,40 @@ class Game_Object:
     def slot_to_pos_c_cam(self):
         return self.game_ref.get_pos([self.slot[0] * 100 + self.size[0]/2, self.slot[1] * 100 + self.size[1]/2])
 
+    def check_los(self):
+        x,y = self.slot_to_pos_center()
+        pxarray = pygame.PixelArray(self.game_ref.los_image)
+        if pxarray[int(x),int(y)] == 0:
+            return False
+        return True
+
+
 
     def slot_to_pos_c(self, slot):
         return self.game_ref.get_pos([slot[0] * 100, slot[1] * 100])
 
     def render(self):
+        if self.type == "wall":
+            return
+        if not self.check_los():
+            return
+
         x, y = self.slot_to_pos()
+
         if self.active:
+
+            smooth_lines_x = self.smoothing_inv*self.slot_size[0]/(3)
+            smooth_lines_y = self.smoothing_inv*self.slot_size[1]/(3)
+
+            lines_pos = (1-self.smooth_value_raw)*50 + 2
+
+            pygame.draw.line(self.game_ref.screen, [255,255,255], [x-lines_pos, y-lines_pos], [x-lines_pos + smooth_lines_x, y-lines_pos], 2)
+            pygame.draw.line(self.game_ref.screen, [255,255,255], [x-lines_pos, y-lines_pos], [x-lines_pos, y-lines_pos + smooth_lines_y], 2)
+
+            pygame.draw.line(self.game_ref.screen, [255,255,255], [x+lines_pos + self.size[0] - smooth_lines_x, y+lines_pos + self.size[1]], [x+lines_pos + self.size[0], y+lines_pos + self.size[1]], 2)
+            pygame.draw.line(self.game_ref.screen, [255,255,255], [x+lines_pos + self.size[0], y+lines_pos+ self.size[1] - smooth_lines_y], [x+lines_pos + self.size[0], y+lines_pos + self.size[1]], 2)
+
+
             pygame.draw.rect(self.game_ref.screen, self.team.color, [x+5, y+5, self.size[0]-10, self.size[1]-10], 4)
             core.func.render_text(self.game_ref, self.name, [x+self.size[0]/2, y-15], 20, centerx = True, color = self.team.color)
             core.func.render_text(self.game_ref, f"HP:{self.hp}", [x+self.size[0]/2, y+self.size[1]+20], 20, centerx = True, color = self.team.color)
@@ -162,28 +200,24 @@ class Game_Object:
 
 
 
-
-
-
-
-
-
-
     def rotate(self, target):
 
         angle = math.degrees(math.atan2(self.pos, target))
         image_rot, rect = core.func.rot_center(self.image, angle, 0,0)
 
 
-
-
-
-
     def click(self):
+
+        if not self.check_los():
+            return
+
         x,y = self.slot_to_pos()
+
 
         if x < self.game_ref.mouse_pos[0] < x + self.size[0] and y < self.game_ref.mouse_pos[1] < y + self.size[1] and "mouse0" in self.game_ref.keypress:
             print("CLICKED")
+
+
 
             if not self.active:
                 self.activate()
@@ -193,6 +227,7 @@ class Game_Object:
                 self.routes = []
 
     def deactivate_other(self):
+        print("Deactivating other from", self)
         for x in self.game_ref.render_layers.keys():
             for obj in self.game_ref.render_layers[x]:
                 if obj != self:
@@ -201,12 +236,16 @@ class Game_Object:
 
     def activate(self, boolean = True):
         if not boolean:
+
             self.build = None
             if self.game_ref.activated_object == self:
                 self.game_ref.activated_object = None
         else:
-            self.center()
+            print("Activating", self)
             self.act_gt.value = 0
+            self.game_ref.activated_a_object = True
+            self.center()
+
             self.select_sound.stop()
             self.select_sound.play()
             if self.range != 0:
@@ -244,7 +283,6 @@ class Game_Object:
                             last_x_y = pos.copy()
 
                         if "mouse2" in self.game_ref.keypress:
-                            print(self.route_to_pos)
                             self.moving_route = self.route_to_pos
                             self.activate(False)
                             self.move_tick.value = self.move_tick.max_value
@@ -253,7 +291,10 @@ class Game_Object:
 
                 elif self.slot != slot:
 
-                    pygame.draw.rect(self.game_ref.screen, core.func.mult(self.team.color, 0.5), [x+10, y+10, 80,80],5)
+                    pygame.draw.rect(self.game_ref.screen, core.func.mult(self.team.color, random.uniform(0.45,0.55)), [x+10+random.randint(-1,1), y+10+random.randint(-1,1), 80,80],5)
+
+
+
 
 
     def center(self):
@@ -264,10 +305,24 @@ class Game_Object:
             for x in self.buttons:
                 x.tick()
 
+
+    def los(self):
+        if self.team == self.game_ref.player_team:
+
+            if self.type == "building":
+                if not self.connected_to_base and not self.name == "Base":
+                    return
+
+            pygame.draw.circle(self.game_ref.los_image, [255,255,255], self.slot_to_pos_center(), self.los_rad)
+
+
     def activation_smoothing(self):
         self.act_gt.tick()
         value = min([self.act_gt.value/self.act_gt.max_value,1])
         self.smoothing = (1 - value)**3.5*150
+        self.smoothing_inv = (value)**3.5*150
+        self.smooth_value = (1 - value)**3.5
+        self.smooth_value_raw = value
 
 
     def scan_movement(self, movement_range):

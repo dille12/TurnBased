@@ -16,6 +16,9 @@ class Soldier(NPC):
         self.range = 2
         self.buildtime = 3
 
+        self.energy_generation = 0
+        self.energy_consumption = 2
+
         self.select_sound = game.sounds["select_sold"]
 
         super().__init__(game, team, name, slot, movement_range = movement_range, hp = hp, image = image)
@@ -27,8 +30,40 @@ class Soldier(NPC):
         ]
         self.check_mode()
 
+        self.desc = "Mid-tech battlemech weaponized with dual railguns and armored with a coldfuzed nanocarbon shell."
+
     def copy(self):
         return Soldier(self.game_ref, self.team, self.slot)
+
+
+class Saboteur(NPC):
+    def __init__(self, game, team, slot):
+        hp = 100
+        name = "Saboteur"
+        image = game.images["saboteur"].copy()
+        movement_range = 4
+        self.range = 1
+        self.buildtime = 3
+
+        self.energy_generation = 0
+        self.energy_consumption = 2
+
+        self.select_sound = game.sounds["select_ass"]
+
+        super().__init__(game, team, name, slot, movement_range = movement_range, hp = hp, image = image)
+
+        self.buttons = [
+        Button(self.game_ref, self, 0.5,9, self.team.color, self.game_ref.images["leg"], activator = "walk", active = True, key_press = "z"),
+        Button(self.game_ref, self, 2,9, self.team.color, self.game_ref.images["fist"], activator = "attack", key_press = "x"),
+        Button(self.game_ref, self, 3.5,9, self.team.color, self.game_ref.images["shield"], activator = "defend", key_press = "c")
+        ]
+
+        self.desc = "Sophisticated field stealth attack unit specializing in voluntary circuit shorting."
+
+        self.check_mode()
+
+    def copy(self):
+        return Saboteur(self.game_ref, self.team, self.slot)
 
 
 class Builder(NPC):
@@ -36,11 +71,16 @@ class Builder(NPC):
         hp = 50
         name = "Builder"
         image = game.images["builder"].copy()
-        movement_range = 3
+        movement_range = 2
         self.range = 1
         self.buildtime = 2
 
+        self.energy_generation = 0
+        self.energy_consumption = 1
+
         self.select_sound = game.sounds["select_builder"]
+
+        self.desc = "An old manufacturing unit repurposed for field mass assembly."
 
 
         super().__init__(game, team, name, slot, movement_range = movement_range, hp = hp, image = image)
@@ -48,8 +88,8 @@ class Builder(NPC):
         self.buttons = [
         Button(self.game_ref, self, 0.5,9, self.team.color, self.game_ref.images["leg"], activator = "walk", active = True, key_press = "z"),
         Button(self.game_ref, self, 2,9, self.team.color, self.game_ref.images["fist"], activator = "attack", key_press = "x"),
-        Button(self.game_ref, self, 0.5,2, self.team.color, self.game_ref.images["elec_tower"], oneshot = True, oneshot_func = self.npc_build, argument = ElectricTower(self.game_ref, self.team, [-1,-1])),
-        Button(self.game_ref, self, 0.5,3.5, self.team.color, self.game_ref.images["energywell"], oneshot = True, oneshot_func = self.npc_build, argument = EnergyWell(self.game_ref, self.team, [-1,-1]))
+        Button(self.game_ref, self, 0.5,2, self.team.color, self.game_ref.images["elec_tower"], oneshot = True, key_press = "1",oneshot_func = self.npc_build, argument = ElectricTower(self.game_ref, self.team, [-1,-1])),
+        Button(self.game_ref, self, 0.5,3.5, self.team.color, self.game_ref.images["energywell"], oneshot = True, key_press = "2", oneshot_func = self.npc_build, argument = EnergyWell(self.game_ref, self.team, [-1,-1]))
         # Button(self.game_ref, self, 3.5,9, self.team.color, self.game_ref.images["shield"], activator = "defend", key_press = "d")
         ]
         self.check_mode()
@@ -64,18 +104,22 @@ class Base(Building):
 
         self.select_sound = game.sounds["select_base"]
         self.buildtime = 1
+        self.energy_generation = 5
+        self.energy_consumption = 0
 
         print("BASE: type", type(self).__dict__)
 
         image = game.images["base"].copy()
         size = [2,2]
         self.range = 0
+        self.desc = "Base of operations for your team."
 
         super().__init__(game, team, name, slot, size = size, hp = hp, image = image)
 
         self.buttons = [
-        Button(self.game_ref, self, 0.5,1, self.team.color, self.game_ref.images["builder"], oneshot = True, oneshot_func = self.purchase, argument = Builder(self.game_ref, self.team, [-1,-1])),
-        Button(self.game_ref, self, 0.5,2.5, self.team.color, self.game_ref.images["soldier"], oneshot = True, oneshot_func = self.purchase, argument = Soldier(self.game_ref, self.team, [-1,-1]))
+        Button(self.game_ref, self, 0.5,2, self.team.color, self.game_ref.images["builder"], key_press = "1", oneshot = True, oneshot_func = self.purchase, argument = Builder(self.game_ref, self.team, [-1,-1])),
+        Button(self.game_ref, self, 0.5,3.5, self.team.color, self.game_ref.images["soldier"], key_press = "2", oneshot = True, oneshot_func = self.purchase, argument = Soldier(self.game_ref, self.team, [-1,-1])),
+        Button(self.game_ref, self, 0.5,5, self.team.color, self.game_ref.images["saboteur"], key_press = "3", oneshot = True, oneshot_func = self.purchase, argument = Saboteur(self.game_ref, self.team, [-1,-1]))
         ]
         if self.team == self.game_ref.player_team:
             print("CENTERING IN START")
@@ -89,13 +133,19 @@ class ElectricTower(Building):
         hp = 200
         name = "Electric Tower"
         image = game.images["elec_tower"].copy()
-        self.select_sound = game.sounds["select_tower"]
+        self.select_sound = game.sounds["select_2"]
         size = [1,1]
         self.range = 0
         self.buildtime = 1
+        self.energy_generation = 0
+        self.energy_consumption = 0
+
 
         super().__init__(game, team, name, slot, size = size, hp = hp, image = image)
 
+        self.los_rad = 0
+
+        self.desc = "Conduit for electricity."
     def copy(self):
         return ElectricTower(self.game_ref, self.team, self.slot)
 
@@ -108,6 +158,11 @@ class EnergyWell(Building):
         size = [1,1]
         self.range = 0
         self.buildtime = 3
+
+        self.energy_generation = 2
+        self.energy_consumption = 0
+
+        self.desc = "Harvests energy from deposits."
 
         super().__init__(game, team, name, slot, size = size, hp = hp, image = image)
 

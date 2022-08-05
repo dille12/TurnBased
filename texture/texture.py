@@ -22,7 +22,7 @@ def load_images(game, size_conversion):
 
 
 
-    for x in range(1,100):
+    for x in range(1,151):
         game.terminal[x] = pygame.font.Font('texture/terminal.ttf', round(x/size_conversion[0]))
 
 

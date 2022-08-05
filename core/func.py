@@ -1,6 +1,7 @@
 import pygame
 import random
 from values import *
+import math
 
 
 def print_s(game, text_str,slot, color = [255,255,255], highlight = False):
@@ -9,6 +10,13 @@ def print_s(game, text_str,slot, color = [255,255,255], highlight = False):
 
 
     game.screen.blit(text, (game.resolution[0] - 10 - text.get_rect().size[0], slot*30)) #
+
+def towards_target_int(pos, target, panning = 0.15):
+    return pos + (target - pos)*panning
+
+
+def towards_target(pos, target, panning = 0.15):
+    return minus(pos[i], minus(minus(target[i], pos[i], op = "-"), [panning,panning], op="*"))
 
 def render_text(game, string, pos, font_size, centerx = False, centery = False, color = [255,255,255]):
     text = game.terminal[font_size].render(str(string), False, color)
@@ -70,6 +78,9 @@ def mult(list1, am):
 def point_inside(point, point2, tolerance):
     boolean = point2[0] < point[0] < point2[0] + tolerance[0] and point2[1] < point[1] < point2[1] + tolerance[1]
     return boolean
+
+def get_dist_points(point_1,point_2):
+    return math.sqrt((point_2[0] - point_1[0])**2 + (point_2[1] - point_1[1])**2)
 
 
 def get_shortest_route(point, routes):

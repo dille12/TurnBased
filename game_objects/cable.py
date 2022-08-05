@@ -5,7 +5,7 @@ from core.func import *
 
 
 class Cable(Game_Object):
-    def __init__(self, game, team, game_tick, start_obj = None, end_obj = None):
+    def __init__(self, game, team, game_tick):
         self.points = []
         self.sticks = []
         self.game_tick = game_tick(30)
@@ -14,6 +14,8 @@ class Cable(Game_Object):
         self.game_ref = game
         self.slot_size = [0,0]
         self.slot = [-1,-1]
+        self.type = "cable"
+
 
 
     def tick(self):
@@ -23,8 +25,31 @@ class Cable(Game_Object):
         for x in self.sticks:
             x.render(self.game_ref.screen, color = mult(self.team, self.game_tick.value/self.game_tick.max_value))
 
+    def update(self):
+        if self.start_obj.connected_to_base and not self.end_obj.connected_to_base:
+            self.end_obj.connected_to_base = True
+            print(self.end_obj)
+            self.game_ref.connected_in_scan += 1
+        elif self.end_obj.connected_to_base and not self.start_obj.connected_to_base :
+            self.start_obj.connected_to_base = True
+            print(self.start_obj)
+            self.game_ref.connected_in_scan += 1
 
-    def generate(self, start, end, hanging, subdiv = 2):
+    def disconnect(self):
+        self.start_obj.connected_to_base = False
+        self.end_obj.connected_to_base = False
+
+
+    def connect(self, boolean = True):
+        if not self.start_obj.connected_to_base or not self.end_obj.connected_to_base:
+            self.start_obj.connected_to_base = boolean
+            print(self.start_obj)
+            self.end_obj.connected_to_base = boolean
+            print(self.end_obj)
+            self.game_ref.connected_in_scan += 2
+
+
+    def generate(self, start, end, hanging, subdiv = 2, start_obj = None, end_obj = None):
         print("Starting generation")
         self.points.append(Point(np.array(start), True))
         self.startpoint = self.points[-1]
@@ -39,7 +64,10 @@ class Cable(Game_Object):
             sticks2 = self.sticks.copy()
             for stick in sticks2:
                 stick.subdivide(self.points, self.sticks, lower_center = hanging)
-                print("Subdivision complete")
+
+        self.start_obj = start_obj
+        self.end_obj = end_obj
+
 
         print("Cable generated")
 

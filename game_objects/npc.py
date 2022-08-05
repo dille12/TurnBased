@@ -53,26 +53,33 @@ class NPC(Game_Object):
             list_play([self.game_ref.sounds["walk1"], self.game_ref.sounds["walk2"], self.game_ref.sounds["walk3"]])
 
             self.turn_movement -= 1
+            self.los()
 
             print(self.moving_route)
         else:
             self.slot = minus(self.slot, minus(minus(self.target, self.slot, op = "-"), [0.6,0.6], op="*"))
 
 
-
+    def update_routes(self):
+        self.routes = self.scan_movement(self.turn_movement)
 
 
     def tick(self):
-        self.activation_smoothing()
+        self.los()
+
+
+
         if self.moving_route == []:
             self.click()
+
+        self.activation_smoothing()
 
         if self.build == None:
 
             if self.mode == "walk":
 
                 if self.active and "mouse0" in self.game_ref.keypress:
-                    self.routes = self.scan_movement(self.turn_movement)
+                    self.update_routes()
 
                 if self.active:
                     self.render_routes()
@@ -105,6 +112,7 @@ class NPC(Game_Object):
             if "mouse0" in self.game_ref.keypress and self.build.able_to_place:
                 self.game_ref.gen_object(self.build)
                 self.build = None
+                self.update_routes()
 
         else:
 

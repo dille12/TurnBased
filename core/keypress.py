@@ -20,6 +20,8 @@ def key_press_manager(obj):
     [pygame.K_x, "x"],
     [pygame.K_c, "c"],
     [pygame.K_z, "z"],
+    [pygame.K_1, "1"],
+    [pygame.K_2, "2"],
 
     [pygame.K_ESCAPE, "esc"]
     ]:

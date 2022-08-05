@@ -10,12 +10,14 @@ from values import *
 import sys
 from core.keypress import *
 from core.camera_movement import *
+from core.image_transform import *
 from core.func import *
 from core.map_gen import *
 import numpy as np
 from game_objects.objects import *
 from core.player import Player
 from hud_elements.button import *
+
 
 
 class Game:
@@ -38,6 +40,11 @@ class Game:
         self.terminal = {}
         self.size_conv = [1920/resolution[0], 1080/resolution[1]]
 
+
+        self.surf = pygame.Surface((300,100))
+        self.surf.set_alpha(100)
+        self.surf.fill((0,0,0))
+
         self.camera_pos = [0,0]
         self.prev_pos = [0,0]
         self.camera_pos_target = [0,0]
@@ -52,18 +59,26 @@ class Game:
         self.screen = pygame.display.set_mode(resolution, pygame.FULLSCREEN)
         load_images(self ,self.size_conv)
         load_sounds(self)
+
+        for x in [blue_t, red_t]:
+            x.nrg = colorize(self.images["nrg"], pygame.Color(x.color))
+
         print(self.images)
         print(self.sounds)
 
         self.clock = pygame.time.Clock()
+        self.map_size = self.images["map"].get_size()
+        self.los_image = pygame.Surface(self.images["map"].get_size()).convert()
+        self.los_image.fill([0,0,0])
+        #self.los_image.set_alpha(100)
+        self.los_image.set_colorkey([255,255,255])
 
         self.size_slots, tiles, self.deposits = gen_map(self.images["layout"])
 
         self.render_layers = {"1.BOTTOM" : [], "2.ORE" : [], "3.BUILDINGS" : [], "4.NPCS" : [], "5.CABLE" : [], "6.HUD" : []}
         #self.render_layers["3.BUILDINGS"].append(Building(self,GREEN,"Base",[3,3], image = self.images["base"].copy(), size = [2,2]))
         self.render_layers["3.BUILDINGS"].append(Base(self, blue_t, [1,1]))
-        self.render_layers["3.BUILDINGS"].append(ElectricTower(self, blue_t, [5,2]))
-        self.render_layers["3.BUILDINGS"].append(ElectricTower(self, blue_t, [9,2]))
+        self.render_layers["3.BUILDINGS"].append(Base(self, red_t, [22,22]))
 
         self.render_layers["4.NPCS"].append(Builder(self, blue_t, [3,2]))
 
@@ -74,7 +89,7 @@ class Game:
         for x in tiles:
             self.render_layers["1.BOTTOM"].append(Wall(self,nature,"Wall",x))
 
-        self.next_turn_button = Button(self, self, 17,9, self.player_team.color, self.images["nextturn"], oneshot = "walk", oneshot_func = self.next_turn)
+        self.next_turn_button = Button(self, self, 17,8.5, self.player_team.color, self.images["nextturn"], oneshot = "walk", oneshot_func = self.next_turn)
 
         self.keypress = []
         self.keypress_held_down = []
@@ -93,18 +108,49 @@ class Game:
         return minus(minus(pos,self.camera_pos, op = "+"),self.size_conv, op = "/")
 
     def next_turn(self, arg):
+        self.los_image.fill([0,0,0])
         for x in self.return_objects():
-            if x.team == self.player_team:
-                if hasattr(x, "turn_movement"):
-                    x.turn_movement = x.movement_range
-                if hasattr(x, "shots"):
-                    x.shots = x.shots_per_round
 
+            if x.type == "building":
+                x.los()
+
+            if hasattr(x, "turn_movement"):
+                x.turn_movement = x.movement_range
+            if hasattr(x, "shots"):
+                x.shots = x.shots_per_round
+            if hasattr(x, "c_build_time"):
                 if x.c_build_time > 0:
                     x.c_build_time -= 1
 
     def slot_inside(self, slot):
         return 0 <= slot[0] < self.size_slots[0] and 0 <= slot[1] < self.size_slots[1]
+
+    def scan_connecting_cables(self):
+        print("Scanning cablenetwork")
+        self.connected_in_scan = 0
+        for x in self.render_layers["3.BUILDINGS"]:
+            if x.name == "Base" and x.team == self.player_team:
+                print(x)
+                base = x
+                break
+
+        for cable in self.render_layers["5.CABLE"]:
+            cable.disconnect()
+
+
+        while 1:
+            connected_last = self.connected_in_scan
+            for cable in self.render_layers["5.CABLE"]:
+                print(cable.start_obj, cable.end_obj)
+                if base in [cable.start_obj, cable.end_obj]:
+                    print("BASE FOUND")
+                    cable.connect()
+                cable.update()
+            print("CONNECTED:",self.connected_in_scan)
+            if connected_last == self.connected_in_scan:
+                break
+
+
 
 
 
@@ -121,11 +167,25 @@ class Game:
 
     def renderobjects(self):
 
+        self.activated_a_object = False
+
         self.screen.blit(self.images["map"], minus([0,0],self.camera_pos, op="-"))
 
-        for x in self.render_layers.keys():
+        for x in ["1.BOTTOM", "2.ORE", "3.BUILDINGS", "4.NPCS",  "5.CABLE", "LOS", "activated", "6.HUD"]:
+            if x == "activated":
+                if self.activated_object != None and not self.activated_a_object:
+                    self.activated_object.tick()
+                continue
+
+            if x == "LOS":
+                self.screen.blit(self.los_image, minus([0,0],self.camera_pos, op="-"))
+                continue
+
             for obj in self.render_layers[x]:
-                obj.tick()
+                if obj != self.activated_object:
+                    obj.tick()
+
+
 
 
 
@@ -155,19 +215,66 @@ class Game:
                             slots.append(core.func.minus(obj.slot,[x,y]))
         return slots
 
+    def check_cable_availablity(self, start, end):
+        if core.func.get_dist_points(start.center_slot(), end.center_slot()) >= 4.9:
+            return False
+        for x in self.return_objects(["5.CABLE"]):
+            if (x.start_obj == start and x.end_obj == end) or (x.start_obj == end and x.end_obj == start):
+                return False
+        return True
+
+
+    def calc_energy(self):
+        self.player_team.energy_consumption = 0
+        self.player_team.energy_generation = 0
+        for x in (x for x in self.return_objects() if x.team == self.player_team):
+
+            for y in x.build_queue:
+                self.player_team.energy_consumption += y.energy_consumption
+                self.player_team.energy_generation += y.energy_generation
+
+            self.player_team.energy_consumption += x.energy_consumption
+
+            if x.connected_to_base or x.name == "Base":
+                self.player_team.energy_generation += x.energy_generation
+
+        self.player_team.c = core.func.towards_target_int(self.player_team.c, self.player_team.energy_consumption)
+        self.player_team.g = core.func.towards_target_int(self.player_team.g, self.player_team.energy_generation)
+
 
     def draw_HUD(self):
-
-
-
+        hud_transpose = 0
         if self.activated_object != None:
             hud_transpose = self.activated_object.smoothing
-            render_text(self, self.activated_object.name, [20,20 - hud_transpose], 60, color = self.activated_object.team.color)
+            render_text(self, self.activated_object.name, [17,20 - hud_transpose], 80, color = self.activated_object.team.color)
             if self.activated_object.type == "npc":
-                render_text(self, f"Movement : {self.activated_object.turn_movement}/{self.activated_object.movement_range}", [20,70 - hud_transpose], 30, color = self.activated_object.team.color)
-                render_text(self, f"Mode : {self.activated_object.mode}", [20,100 - hud_transpose], 30, color = self.activated_object.team.color)
+                render_text(self, f"Movement : {self.activated_object.turn_movement}/{self.activated_object.movement_range}", [20,100 - hud_transpose], 30, color = self.activated_object.team.color)
+                render_text(self, f"Mode : {self.activated_object.mode}", [20,130 - hud_transpose], 30, color = self.activated_object.team.color)
+            elif self.activated_object.type == "building":
+                render_text(self, "Connected to network" if self.activated_object.connected_to_base or self.activated_object.name == "Base" else "NOT CONNECTED TO NETWORK", [20,100 - hud_transpose], 30, color = self.activated_object.team.color)
 
 
+
+        x,y = self.resolution
+
+        if point_inside(self.mouse_pos, [x-300,y-100], [300,100]):
+
+            render_text(self, f"CONS. : {self.player_team.energy_consumption} GEN. : {self.player_team.energy_generation}", [x-270,y-125], 21, color = self.player_team.color)
+
+        self.screen.blit(self.surf, [x-300,y-100])
+
+
+
+        pygame.draw.rect(self.screen, [255,164,0], [x-300,y-50,300 * (random.uniform(0,0.15) + self.player_team.c)/self.player_team.g,50])
+
+        self.screen.blit(self.player_team.nrg, [x-300,y-100])
+        self.screen.blit(self.images["nrg_icon"], [x-290,y-100])
+
+        #
+
+
+
+        render_text(self, f"ENERGY CONSUMPTION", [x-240,y-91], 21, color = self.player_team.color)
 
 
 
@@ -175,10 +282,11 @@ class Game:
 
 
     def loop(self):
+
+        self.calc_energy()
+
         key_press_manager(self)
         cam_movement(self)
-
-
 
         self.delta = np.array(self.prev_pos) - np.array(self.camera_pos)
         self.prev_pos = self.camera_pos.copy()

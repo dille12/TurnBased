@@ -30,12 +30,12 @@ class Building(Game_Object):
 
     def create_cable(self):
         x,y = self.slot_to_pos()
-        if "mouse1" in self.game_ref.keypress:
+        if "mouse2" in self.game_ref.keypress:
             if point_inside(self.game_ref.mouse_pos, [x,y], self.size):
                 if self.cable == None and self.active == True:
                     self.game_ref.sounds["cable_s"].play()
                     self.cable = Cable(self.game_ref, self.team.color, self.game_ref.GT)
-                    self.cable.generate([x,y], self.game_ref.mouse_pos, 45,3)
+                    self.cable.generate([x,y], self.game_ref.mouse_pos, 3,4)
                 else:
                     self.cable = None
 
@@ -63,18 +63,37 @@ class Building(Game_Object):
         if self.cable != None:
             self.cable.startpoint.pos = np.array(self.slot_to_pos_c_cam())
             self.cable.endpoint.pos = np.array(self.game_ref.mouse_pos)
-            self.cable.tick()
-            if "mouse1" in self.game_ref.keypress:
-                for obj in self.game_ref.render_layers["3.BUILDINGS"]:
-                    if obj != self and obj.team == self.team and point_inside(self.game_ref.mouse_pos, obj.slot_to_pos(), obj.size):
-                        self.cable = None
-                        self.game_ref.sounds["cable_e"].play()
 
-                        cable_temp = Cable(self.game_ref, self.team.color, self.game_ref.GT)
-                        cable_temp.generate(self.slot_to_pos_c_cam(), obj.slot_to_pos_c_cam(), 0,3)
-                        self.game_ref.render_layers["5.CABLE"].append(cable_temp)
-                        print("Created static cable")
-                        break
+
+            for obj in self.game_ref.render_layers["3.BUILDINGS"]:
+                if obj != self and obj.team == self.team and point_inside(self.game_ref.mouse_pos, obj.slot_to_pos(), obj.size):
+                    x,y = obj.slot_to_pos()
+                    if self.game_ref.check_cable_availablity(self,obj):
+                        pygame.draw.rect(self.game_ref.screen, [0,255,0], [x, y, obj.size[0], obj.size[1]],5)
+                        self.cable.endpoint.pos = np.array(obj.slot_to_pos_c_cam())
+
+                        if "mouse2" not in self.game_ref.keypress_held_down:
+                            self.cable = None
+                            self.game_ref.sounds["cable_e"].play()
+
+                            cable_temp = Cable(self.game_ref, self.team.color, self.game_ref.GT)
+                            cable_temp.generate(self.slot_to_pos_c_cam(), obj.slot_to_pos_c_cam(), 0,3, start_obj = self, end_obj = obj)
+                            self.game_ref.render_layers["5.CABLE"].append(cable_temp)
+                            self.game_ref.scan_connecting_cables()
+                            print("Created static cable")
+                            break
+                    else:
+                        pygame.draw.rect(self.game_ref.screen, [255,0,0], [x, y, obj.size[0], obj.size[1]],5)
+                    break
+
+
+
+            if "mouse2" not in self.game_ref.keypress_held_down:
+                self.cable = None
+
+            if self.cable != None:
+                self.cable.tick()
+
 
     def render_buildable(self, occ_slots):
         unplaceable = False
@@ -121,8 +140,11 @@ class Building(Game_Object):
 
 
     def tick(self):
-        self.activation_smoothing()
+
+        self.los()
+
         self.click()
+        self.activation_smoothing()
 
 
         if self.active:
