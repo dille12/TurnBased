@@ -11,6 +11,7 @@ stop_threads = False
 map_index = 0
 game_stage = "lobby"
 
+
 def threaded_client(conn):
     global players, running, stop_threads, game_stage, map_index
 
@@ -20,7 +21,7 @@ def threaded_client(conn):
     while running:
         try:
             data = conn.recv(2048)
-            reply = data.decode('utf-8')
+            reply = data.decode("utf-8")
             if stop_threads:
                 break
 
@@ -42,8 +43,10 @@ def threaded_client(conn):
     del players[conn]
     conn.close()
 
+
 def return_players():
     return players
+
 
 def server_run():
 
@@ -76,10 +79,19 @@ def server_run():
         print("Server ticking...")
         conn, addr = s.accept()
         print("SERVER: Connected to: ", addr)
-        players[conn] = {"username": "", "x": "0", "y": "0", "a": "0",
-                         "hp": "100", "bullets": [], "grenades": [],
-                         "zombies" : [], "z_events" : [], "turrets" : [],
-                         "barricades" : []}
+        players[conn] = {
+            "username": "",
+            "x": "0",
+            "y": "0",
+            "a": "0",
+            "hp": "100",
+            "bullets": [],
+            "grenades": [],
+            "zombies": [],
+            "z_events": [],
+            "turrets": [],
+            "barricades": [],
+        }
         print("SERVER: CREATING A THREAD TO", addr)
 
         start_new_thread(threaded_client, (conn,))

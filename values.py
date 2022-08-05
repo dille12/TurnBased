@@ -1,6 +1,6 @@
 from core.player import Player
 
-BLACK = [0,0,0]
+BLACK = [0, 0, 0]
 BLUE = [51, 102, 255]
 RED = [255, 0, 102]
 GREEN = [153, 255, 51]
@@ -12,10 +12,8 @@ red_t = Player(RED, "Runkkari")
 nature = Player(BLACK, "Nature")
 
 
-
-
 class GameTick:
-    def __init__(self, max_value = 30, oneshot = False):
+    def __init__(self, max_value=30, oneshot=False):
         self.value = 0
         self.max_value = max_value
         self.oneshot = oneshot

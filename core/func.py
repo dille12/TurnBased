@@ -4,29 +4,36 @@ from values import *
 import math
 
 
-def print_s(game, text_str,slot, color = [255,255,255], highlight = False):
+def print_s(game, text_str, slot, color=[255, 255, 255], highlight=False):
     text = game.terminal[30].render(str(text_str), False, color)
 
+    game.screen.blit(
+        text, (game.resolution[0] - 10 - text.get_rect().size[0], slot * 30)
+    )  #
 
 
-    game.screen.blit(text, (game.resolution[0] - 10 - text.get_rect().size[0], slot*30)) #
-
-def towards_target_int(pos, target, panning = 0.15):
-    return pos + (target - pos)*panning
+def towards_target_int(pos, target, panning=0.15):
+    return pos + (target - pos) * panning
 
 
-def towards_target(pos, target, panning = 0.15):
-    return minus(pos[i], minus(minus(target[i], pos[i], op = "-"), [panning,panning], op="*"))
+def towards_target(pos, target, panning=0.15):
+    return minus(
+        pos[i], minus(minus(target[i], pos[i], op="-"), [panning, panning], op="*")
+    )
 
-def render_text(game, string, pos, font_size, centerx = False, centery = False, color = [255,255,255]):
+
+def render_text(
+    game, string, pos, font_size, centerx=False, centery=False, color=[255, 255, 255]
+):
     text = game.terminal[font_size].render(str(string), False, color)
 
     if centerx:
-        pos[0] -= text.get_size()[0]/2
+        pos[0] -= text.get_size()[0] / 2
     if centery:
-        pos[1] -= text.get_size()[1]/2
+        pos[1] -= text.get_size()[1] / 2
 
-    game.screen.blit(text, pos) #
+    game.screen.blit(text, pos)  #
+
 
 def list_play(list):
     for y in list:
@@ -35,17 +42,18 @@ def list_play(list):
 
 
 def pick_random_from_list(list):
-    return list[random.randint(0,len(list)-1)]
+    return list[random.randint(0, len(list) - 1)]
+
 
 def rot_center(image, angle, x, y):
 
     rotated_image = pygame.transform.rotate(image, angle)
-    new_rect = rotated_image.get_rect(center = image.get_rect(center = (x, y)).center)
+    new_rect = rotated_image.get_rect(center=image.get_rect(center=(x, y)).center)
 
     return rotated_image, new_rect
 
 
-def minus(list1,list2, op = "+"):
+def minus(list1, list2, op="+"):
     try:
         list_1 = list1.copy()
         list_2 = list2.copy()
@@ -76,15 +84,19 @@ def mult(list1, am):
 
 
 def point_inside(point, point2, tolerance):
-    boolean = point2[0] < point[0] < point2[0] + tolerance[0] and point2[1] < point[1] < point2[1] + tolerance[1]
+    boolean = (
+        point2[0] < point[0] < point2[0] + tolerance[0]
+        and point2[1] < point[1] < point2[1] + tolerance[1]
+    )
     return boolean
 
-def get_dist_points(point_1,point_2):
-    return math.sqrt((point_2[0] - point_1[0])**2 + (point_2[1] - point_1[1])**2)
+
+def get_dist_points(point_1, point_2):
+    return math.sqrt((point_2[0] - point_1[0]) ** 2 + (point_2[1] - point_1[1]) ** 2)
 
 
 def get_shortest_route(point, routes):
-    complete_route = [0,0,0,0,0,0,9,0,0,0,0,0]
+    complete_route = [0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0]
     for route in routes:
         if point in route:
 
@@ -97,6 +109,5 @@ def get_shortest_route(point, routes):
                         complete_route = temp
                         print(temp)
                     break
-
 
     return complete_route

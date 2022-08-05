@@ -7,15 +7,15 @@ import random
 
 
 class Game_Object:
-    def __init__(self, game, team, name="obj", slot=None, hp = 100, size = [1,1]):
+    def __init__(self, game, team, name="obj", slot=None, hp=100, size=[1, 1]):
         self.name = name
         self.slot = slot
         self.game_ref = game
-        self.size = [100*(size[0]), 100*(size[1])]
+        self.size = [100 * (size[0]), 100 * (size[1])]
         self.slot_size = size
 
         self.active = False
-        self.route_to_pos = [[0,0]]
+        self.route_to_pos = [[0, 0]]
         self.team = team
         self.hp = hp
         self.buttons = []
@@ -25,25 +25,15 @@ class Game_Object:
         self.connected_to_base = False
         self.los_rad = 400
 
-
-
         self.shots_per_round = 1
         self.shots = 1
-        self.act_gt = self.game_ref.GT(20, oneshot = True)
-
-
-
-
-
+        self.act_gt = self.game_ref.GT(20, oneshot=True)
 
     def slot_to_pos(self):
         return self.game_ref.get_pos([self.slot[0] * 100, self.slot[1] * 100])
 
     def pos_to_slot(self, pos):
-        return [round(pos[0]/100-0.5), round(pos[1]/100-0.5)]
-
-
-
+        return [round(pos[0] / 100 - 0.5), round(pos[1] / 100 - 0.5)]
 
     def check_mode(self):
         print("Checking")
@@ -66,30 +56,48 @@ class Game_Object:
         return free_spots
 
     def in_range(self, object):
-        return abs(self.slot[0] - object.slot[0]) <= self.range and abs(self.slot[1] - object.slot[1]) <= self.range
-
+        return (
+            abs(self.slot[0] - object.slot[0]) <= self.range
+            and abs(self.slot[1] - object.slot[1]) <= self.range
+        )
 
     def scan_enemies(self):
         self.shootables = []
-        for x in (x for x in self.game_ref.return_objects(["3.BUILDINGS", "4.NPCS"]) if x.team != self.team and x.team != BLACK and self.in_range(x)):
+        for x in (
+            x
+            for x in self.game_ref.return_objects(["3.BUILDINGS", "4.NPCS"])
+            if x.team != self.team and x.team != BLACK and self.in_range(x)
+        ):
             self.shootables.append(x)
 
     def center_slot(self):
         return [self.slot[0] + self.slot_size[0], self.slot[1] + self.slot_size[1]]
 
-
     def highlight_enemies(self):
         for obj in self.shootables:
-            x,y = obj.slot_to_pos()
-            pygame.draw.rect(self.game_ref.screen, [255,0,0], [x, y, obj.size[0], obj.size[1]], 7)
+            x, y = obj.slot_to_pos()
+            pygame.draw.rect(
+                self.game_ref.screen, [255, 0, 0], [x, y, obj.size[0], obj.size[1]], 7
+            )
 
-            if core.func.point_inside(self.game_ref.mouse_pos, [x,y], obj.size):
+            if core.func.point_inside(self.game_ref.mouse_pos, [x, y], obj.size):
 
-                pygame.draw.line(self.game_ref.screen, [255,0,0], self.slot_to_pos_c_cam(), obj.slot_to_pos_c_cam(),6)
+                pygame.draw.line(
+                    self.game_ref.screen,
+                    [255, 0, 0],
+                    self.slot_to_pos_c_cam(),
+                    obj.slot_to_pos_c_cam(),
+                    6,
+                )
 
-                core.func.render_text(self.game_ref, "SHOOT R-CLICK", core.func.minus(self.game_ref.mouse_pos,[0,-100]), 30, centerx = True, color = [255,0,0])
-
-
+                core.func.render_text(
+                    self.game_ref,
+                    "SHOOT R-CLICK",
+                    core.func.minus(self.game_ref.mouse_pos, [0, -100]),
+                    30,
+                    centerx=True,
+                    color=[255, 0, 0],
+                )
 
                 if "mouse2" in self.game_ref.keypress:
                     self.shots -= 1
@@ -107,26 +115,34 @@ class Game_Object:
                 self.c_build_time = self.build_queue[0].buildtime
 
         if self.build_queue != [] and self.active:
-            core.func.render_text(self.game_ref, "QUEUE:", [50,870],20, color = self.team.color)
+            core.func.render_text(
+                self.game_ref, "QUEUE:", [50, 870], 20, color=self.team.color
+            )
             x_pos = -50
             i = 0
             for x in self.build_queue:
                 x_pos += 100
-                self.game_ref.screen.blit(x.image if i == 0 else x.image_bg, [x_pos, 900])
-
+                self.game_ref.screen.blit(
+                    x.image if i == 0 else x.image_bg, [x_pos, 900]
+                )
 
                 i += 1
-            pygame.draw.rect(self.game_ref.screen, self.team.color, [50,900,100,100],2)
-            core.func.render_text(self.game_ref, self.c_build_time, [55,905],50, color = self.team.color)
-
+            pygame.draw.rect(
+                self.game_ref.screen, self.team.color, [50, 900, 100, 100], 2
+            )
+            core.func.render_text(
+                self.game_ref, self.c_build_time, [55, 905], 50, color=self.team.color
+            )
 
     def purchase(self, type):
-        if type.energy_consumption + self.team.energy_consumption <= self.team.energy_generation:
+        if (
+            type.energy_consumption + self.team.energy_consumption
+            <= self.team.energy_generation
+        ):
             if len(self.build_queue) < 10:
                 self.build_queue.append(type)
                 if len(self.build_queue) == 1:
                     self.c_build_time = type.buildtime
-
 
     def generate(self, type):
         rand_spots = self.scan_a_random_spot()
@@ -140,22 +156,26 @@ class Game_Object:
                 if obj == self:
                     self.game_ref.render_layers[x].remove(self)
 
-
-
     def slot_to_pos_center(self):
-        return [self.slot[0] * 100 + self.size[0]/2, self.slot[1] * 100 + self.size[1]/2]
+        return [
+            self.slot[0] * 100 + self.size[0] / 2,
+            self.slot[1] * 100 + self.size[1] / 2,
+        ]
 
     def slot_to_pos_c_cam(self):
-        return self.game_ref.get_pos([self.slot[0] * 100 + self.size[0]/2, self.slot[1] * 100 + self.size[1]/2])
+        return self.game_ref.get_pos(
+            [
+                self.slot[0] * 100 + self.size[0] / 2,
+                self.slot[1] * 100 + self.size[1] / 2,
+            ]
+        )
 
     def check_los(self):
-        x,y = self.slot_to_pos_center()
+        x, y = self.slot_to_pos_center()
         pxarray = pygame.PixelArray(self.game_ref.los_image)
-        if pxarray[int(x),int(y)] == 0:
+        if pxarray[int(x), int(y)] == 0:
             return False
         return True
-
-
 
     def slot_to_pos_c(self, slot):
         return self.game_ref.get_pos([slot[0] * 100, slot[1] * 100])
@@ -170,56 +190,123 @@ class Game_Object:
 
         if self.active:
 
-            smooth_lines_x = self.smoothing_inv*self.slot_size[0]/(3)
-            smooth_lines_y = self.smoothing_inv*self.slot_size[1]/(3)
+            smooth_lines_x = self.smoothing_inv * self.slot_size[0] / (3)
+            smooth_lines_y = self.smoothing_inv * self.slot_size[1] / (3)
 
-            lines_pos = (1-self.smooth_value_raw)*50 + 2
+            lines_pos = (1 - self.smooth_value_raw) * 50 + 2
 
-            pygame.draw.line(self.game_ref.screen, [255,255,255], [x-lines_pos, y-lines_pos], [x-lines_pos + smooth_lines_x, y-lines_pos], 2)
-            pygame.draw.line(self.game_ref.screen, [255,255,255], [x-lines_pos, y-lines_pos], [x-lines_pos, y-lines_pos + smooth_lines_y], 2)
+            pygame.draw.line(
+                self.game_ref.screen,
+                [255, 255, 255],
+                [x - lines_pos, y - lines_pos],
+                [x - lines_pos + smooth_lines_x, y - lines_pos],
+                2,
+            )
+            pygame.draw.line(
+                self.game_ref.screen,
+                [255, 255, 255],
+                [x - lines_pos, y - lines_pos],
+                [x - lines_pos, y - lines_pos + smooth_lines_y],
+                2,
+            )
 
-            pygame.draw.line(self.game_ref.screen, [255,255,255], [x+lines_pos + self.size[0] - smooth_lines_x, y+lines_pos + self.size[1]], [x+lines_pos + self.size[0], y+lines_pos + self.size[1]], 2)
-            pygame.draw.line(self.game_ref.screen, [255,255,255], [x+lines_pos + self.size[0], y+lines_pos+ self.size[1] - smooth_lines_y], [x+lines_pos + self.size[0], y+lines_pos + self.size[1]], 2)
+            pygame.draw.line(
+                self.game_ref.screen,
+                [255, 255, 255],
+                [
+                    x + lines_pos + self.size[0] - smooth_lines_x,
+                    y + lines_pos + self.size[1],
+                ],
+                [x + lines_pos + self.size[0], y + lines_pos + self.size[1]],
+                2,
+            )
+            pygame.draw.line(
+                self.game_ref.screen,
+                [255, 255, 255],
+                [
+                    x + lines_pos + self.size[0],
+                    y + lines_pos + self.size[1] - smooth_lines_y,
+                ],
+                [x + lines_pos + self.size[0], y + lines_pos + self.size[1]],
+                2,
+            )
 
-
-            pygame.draw.rect(self.game_ref.screen, self.team.color, [x+5, y+5, self.size[0]-10, self.size[1]-10], 4)
-            core.func.render_text(self.game_ref, self.name, [x+self.size[0]/2, y-15], 20, centerx = True, color = self.team.color)
-            core.func.render_text(self.game_ref, f"HP:{self.hp}", [x+self.size[0]/2, y+self.size[1]+20], 20, centerx = True, color = self.team.color)
+            pygame.draw.rect(
+                self.game_ref.screen,
+                self.team.color,
+                [x + 5, y + 5, self.size[0] - 10, self.size[1] - 10],
+                4,
+            )
+            core.func.render_text(
+                self.game_ref,
+                self.name,
+                [x + self.size[0] / 2, y - 15],
+                20,
+                centerx=True,
+                color=self.team.color,
+            )
+            core.func.render_text(
+                self.game_ref,
+                f"HP:{self.hp}",
+                [x + self.size[0] / 2, y + self.size[1] + 20],
+                20,
+                centerx=True,
+                color=self.team.color,
+            )
         else:
-            pygame.draw.rect(self.game_ref.screen, self.team.color, [x+5, y+5, self.size[0]-10, self.size[1]-10], 1)
+            pygame.draw.rect(
+                self.game_ref.screen,
+                self.team.color,
+                [x + 5, y + 5, self.size[0] - 10, self.size[1] - 10],
+                1,
+            )
         if self.image != None:
-            self.game_ref.screen.blit(self.image, [x,y])
+            self.game_ref.screen.blit(self.image, [x, y])
 
         if hasattr(self, "turn_movement"):
             for x_1 in range(self.turn_movement):
-                pygame.draw.rect(self.game_ref.screen, self.team.color, [x+5+x_1*round(93/self.movement_range), y+5+92, round(93/self.movement_range)-3, 6])
+                pygame.draw.rect(
+                    self.game_ref.screen,
+                    self.team.color,
+                    [
+                        x + 5 + x_1 * round(93 / self.movement_range),
+                        y + 5 + 92,
+                        round(93 / self.movement_range) - 3,
+                        6,
+                    ],
+                )
 
         if hasattr(self, "turn_movement"):
             for x_1 in range(self.shots):
-                pygame.draw.rect(self.game_ref.screen, [255,0,0], [x+5+x_1*round(93/self.shots), y+5+100, round(93/self.shots_per_round)-3, 6])
-
-
+                pygame.draw.rect(
+                    self.game_ref.screen,
+                    [255, 0, 0],
+                    [
+                        x + 5 + x_1 * round(93 / self.shots),
+                        y + 5 + 100,
+                        round(93 / self.shots_per_round) - 3,
+                        6,
+                    ],
+                )
 
     def rotate(self, target):
 
         angle = math.degrees(math.atan2(self.pos, target))
-        image_rot, rect = core.func.rot_center(self.image, angle, 0,0)
-
+        image_rot, rect = core.func.rot_center(self.image, angle, 0, 0)
 
     def click(self):
 
         if not self.check_los():
             return
 
-        x,y = self.slot_to_pos()
+        x, y = self.slot_to_pos()
 
-
-
-
-        if x < self.game_ref.mouse_pos[0] < x + self.size[0] and y < self.game_ref.mouse_pos[1] < y + self.size[1] and "mouse0" in self.game_ref.keypress:
+        if (
+            x < self.game_ref.mouse_pos[0] < x + self.size[0]
+            and y < self.game_ref.mouse_pos[1] < y + self.size[1]
+            and "mouse0" in self.game_ref.keypress
+        ):
             print("CLICKED")
-
-
 
             if not self.active:
                 self.activate()
@@ -235,8 +322,7 @@ class Game_Object:
                 if obj != self:
                     obj.activate(False)
 
-
-    def activate(self, boolean = True):
+    def activate(self, boolean=True):
         if not boolean:
 
             self.build = None
@@ -255,33 +341,47 @@ class Game_Object:
             self.game_ref.activated_object = self
         self.active = boolean
 
-
     def render_routes(self):
-        rendered = [0,0,0,0,0,0,0,0]
+        rendered = [0, 0, 0, 0, 0, 0, 0, 0]
         if self.route_to_pos == []:
-            self.route_to_pos = [0,0]
+            self.route_to_pos = [0, 0]
         for route in self.routes:
             for slot in route:
                 if slot in rendered:
                     continue
                 rendered.append(slot)
 
-                x,y = self.slot_to_pos_c(slot)
-                if core.func.point_inside(self.game_ref.mouse_pos, [x+10,y+10], [80,80]):
+                x, y = self.slot_to_pos_c(slot)
+                if core.func.point_inside(
+                    self.game_ref.mouse_pos, [x + 10, y + 10], [80, 80]
+                ):
 
                     if self.slot != slot:
 
-                        pygame.draw.rect(self.game_ref.screen, core.func.mult(self.team.color, 0.8), [x+10, y+10, 80,80],10)
+                        pygame.draw.rect(
+                            self.game_ref.screen,
+                            core.func.mult(self.team.color, 0.8),
+                            [x + 10, y + 10, 80, 80],
+                            10,
+                        )
 
                         if self.route_to_pos[-1] != slot:
-                            self.route_to_pos = core.func.get_shortest_route(slot, self.routes)
+                            self.route_to_pos = core.func.get_shortest_route(
+                                slot, self.routes
+                            )
                             print("Calculated new")
 
-                        last_x_y = core.func.minus(self.slot.copy(),[0.5, 0.5])
+                        last_x_y = core.func.minus(self.slot.copy(), [0.5, 0.5])
 
                         for pos in self.route_to_pos:
-                            pos = core.func.minus(pos.copy(),[0.5, 0.5])
-                            pygame.draw.line(self.game_ref.screen, self.team.color, self.slot_to_pos_c(last_x_y), self.slot_to_pos_c(pos),4)
+                            pos = core.func.minus(pos.copy(), [0.5, 0.5])
+                            pygame.draw.line(
+                                self.game_ref.screen,
+                                self.team.color,
+                                self.slot_to_pos_c(last_x_y),
+                                self.slot_to_pos_c(pos),
+                                4,
+                            )
                             last_x_y = pos.copy()
 
                         if "mouse2" in self.game_ref.keypress:
@@ -289,24 +389,31 @@ class Game_Object:
                             self.activate(False)
                             self.move_tick.value = self.move_tick.max_value
 
-
-
                 elif self.slot != slot:
 
-                    pygame.draw.rect(self.game_ref.screen, core.func.mult(self.team.color, random.uniform(0.45,0.55)), [x+10+random.randint(-1,1), y+10+random.randint(-1,1), 80,80],5)
-
-
-
-
+                    pygame.draw.rect(
+                        self.game_ref.screen,
+                        core.func.mult(self.team.color, random.uniform(0.45, 0.55)),
+                        [
+                            x + 10 + random.randint(-1, 1),
+                            y + 10 + random.randint(-1, 1),
+                            80,
+                            80,
+                        ],
+                        5,
+                    )
 
     def center(self):
-        self.game_ref.camera_pos_target = core.func.minus(self.slot_to_pos_center(),core.func.mult(self.game_ref.resolution,0.5), op="-")
+        self.game_ref.camera_pos_target = core.func.minus(
+            self.slot_to_pos_center(),
+            core.func.mult(self.game_ref.resolution, 0.5),
+            op="-",
+        )
 
     def tick_buttons(self):
         if self.active:
             for x in self.buttons:
                 x.tick()
-
 
     def los(self):
         if self.team == self.game_ref.player_team:
@@ -315,17 +422,20 @@ class Game_Object:
                 if not self.connected_to_base and not self.name == "Base":
                     return
 
-            pygame.draw.circle(self.game_ref.los_image, [255,255,255], self.slot_to_pos_center(), self.los_rad)
-
+            pygame.draw.circle(
+                self.game_ref.los_image,
+                [255, 255, 255],
+                self.slot_to_pos_center(),
+                self.los_rad,
+            )
 
     def activation_smoothing(self):
         self.act_gt.tick()
-        value = min([self.act_gt.value/self.act_gt.max_value,1])
-        self.smoothing = (1 - value)**3.5*150
-        self.smoothing_inv = (value)**3.5*150
-        self.smooth_value = (1 - value)**3.5
+        value = min([self.act_gt.value / self.act_gt.max_value, 1])
+        self.smoothing = (1 - value) ** 3.5 * 150
+        self.smoothing_inv = (value) ** 3.5 * 150
+        self.smooth_value = (1 - value) ** 3.5
         self.smooth_value_raw = value
-
 
     def scan_movement(self, movement_range):
         if movement_range == 0:
@@ -338,25 +448,29 @@ class Game_Object:
             route = open_routes[0]
             open_routes.remove(route)
             tile = route[-1]
-            open_tiles = self.scan_tile(tile,occ_slots)
+            open_tiles = self.scan_tile(tile, occ_slots)
             for x in open_tiles:
                 if len(route) == movement_range:
-                    finished_routes.append(route + [[x[0],x[1]]])
+                    finished_routes.append(route + [[x[0], x[1]]])
                 else:
-                    open_routes.append(route + [[x[0],x[1]]])
+                    open_routes.append(route + [[x[0], x[1]]])
         print("Finished")
-        print(time.time()-t)
+        print(time.time() - t)
         return finished_routes
-
-
-
-
-
 
     def scan_tile(self, tile, occ_slots):
         open_routes = []
-        for x, y in [[1,0], [0,1], [-1,0], [0,-1], [1,1], [1,-1], [-1,-1], [-1,1]]:
-            tile2 = core.func.minus(tile.copy(),[x,y])
+        for x, y in [
+            [1, 0],
+            [0, 1],
+            [-1, 0],
+            [0, -1],
+            [1, 1],
+            [1, -1],
+            [-1, -1],
+            [-1, 1],
+        ]:
+            tile2 = core.func.minus(tile.copy(), [x, y])
             if tile2 not in occ_slots and 0 <= tile2[0] < 25 and 0 <= tile2[1] < 25:
                 open_routes.append(tile2)
 

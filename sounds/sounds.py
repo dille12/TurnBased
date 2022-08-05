@@ -3,6 +3,7 @@ import os
 from os import listdir
 from os.path import isfile, join
 
+
 def load_sounds(game):
 
     for path in ["files", "music"]:
@@ -16,7 +17,6 @@ def load_sounds(game):
                 game.sounds[x.removesuffix(".mp3")] = sound
             except Exception as e:
                 print(e)
-
 
 
 # if __name__ == "__main__":

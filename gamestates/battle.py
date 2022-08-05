@@ -17,10 +17,12 @@ class Battle:
         key_press_manager(self.game_ref)
         cam_movement(self.game_ref)
 
-        self.game_ref.delta = np.array(self.game_ref.prev_pos) - np.array(self.game_ref.camera_pos)
+        self.game_ref.delta = np.array(self.game_ref.prev_pos) - np.array(
+            self.game_ref.camera_pos
+        )
         self.game_ref.prev_pos = self.game_ref.camera_pos.copy()
 
-        #self.game_ref.camera_pos = minus(self.game_ref.mouse_pos,[0.3,0.3], op = "*")
+        # self.game_ref.camera_pos = minus(self.game_ref.mouse_pos,[0.3,0.3], op = "*")
         self.game_ref.screen.fill(BLACK)
         self.game_ref.renderobjects()
         self.game_ref.draw_HUD()

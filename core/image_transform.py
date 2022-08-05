@@ -1,5 +1,6 @@
 import pygame
 
+
 def colorize(image, newColor):
     """
     Create a "colorized" copy of a surface (replaces RGB values with the given color, preserving the per-pixel alphas of
@@ -18,10 +19,9 @@ def colorize(image, newColor):
     return image
 
 
-
 def colorize_alpha(image, newColor, alpha):
 
-    image2 = colorize(image,newColor)
+    image2 = colorize(image, newColor)
     image2.set_alpha(alpha)
-    image.blit(image2, [0,0])
+    image.blit(image2, [0, 0])
     return image
