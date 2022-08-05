@@ -214,6 +214,8 @@ class Game_Object:
         x,y = self.slot_to_pos()
 
 
+
+
         if x < self.game_ref.mouse_pos[0] < x + self.size[0] and y < self.game_ref.mouse_pos[1] < y + self.size[1] and "mouse0" in self.game_ref.keypress:
             print("CLICKED")
 

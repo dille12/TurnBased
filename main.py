@@ -17,6 +17,10 @@ import numpy as np
 from game_objects.objects import *
 from core.player import Player
 from hud_elements.button import *
+import gamestates.battle
+import gamestates.menu
+import socket
+
 
 
 
@@ -34,11 +38,15 @@ class Game:
 
         self.resolution = resolution
 
+        hostname = socket.gethostname()
+        self.own_ip = socket.gethostbyname(hostname)
 
         self.images = {}
         self.sounds = {}
         self.terminal = {}
         self.size_conv = [1920/resolution[0], 1080/resolution[1]]
+
+
 
 
         self.surf = pygame.Surface((300,100))
@@ -60,6 +68,11 @@ class Game:
         load_images(self ,self.size_conv)
         load_sounds(self)
 
+
+        self.state = gamestates.menu.Menu(self)
+
+
+
         for x in [blue_t, red_t]:
             x.nrg = colorize(self.images["nrg"], pygame.Color(x.color))
 
@@ -77,10 +90,10 @@ class Game:
 
         self.render_layers = {"1.BOTTOM" : [], "2.ORE" : [], "3.BUILDINGS" : [], "4.NPCS" : [], "5.CABLE" : [], "6.HUD" : []}
         #self.render_layers["3.BUILDINGS"].append(Building(self,GREEN,"Base",[3,3], image = self.images["base"].copy(), size = [2,2]))
-        self.render_layers["3.BUILDINGS"].append(Base(self, blue_t, [1,1]))
-        self.render_layers["3.BUILDINGS"].append(Base(self, red_t, [22,22]))
-
-        self.render_layers["4.NPCS"].append(Builder(self, blue_t, [3,2]))
+        # self.render_layers["3.BUILDINGS"].append(Base(self, blue_t, [1,1]))
+        # self.render_layers["3.BUILDINGS"].append(Base(self, red_t, [22,22]))
+        #
+        # self.render_layers["4.NPCS"].append(Builder(self, blue_t, [3,2]))
 
         for x in self.deposits:
             self.render_layers["1.BOTTOM"].append(Deposit(self,nature,"Wall",x))
@@ -282,22 +295,5 @@ class Game:
 
 
     def loop(self):
-
-        self.calc_energy()
-
-        key_press_manager(self)
-        cam_movement(self)
-
-        self.delta = np.array(self.prev_pos) - np.array(self.camera_pos)
-        self.prev_pos = self.camera_pos.copy()
-
-        #self.camera_pos = minus(self.mouse_pos,[0.3,0.3], op = "*")
-        self.screen.fill(BLACK)
-        self.renderobjects()
-        self.draw_HUD()
-        self.next_turn_button.tick()
-
-        print_s(self, f"FPS:{self.fps}", 1)
-        print_s(self, f"IDLE:{self.idle}%", 2)
-
+        self.state.tick()
         pygame.display.update()

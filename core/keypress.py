@@ -6,8 +6,8 @@ def key_press_manager(obj):
 
     obj.mouse_pos = core.func.minus(list(pygame.mouse.get_pos()),obj.size_conv,op="*")
     #obj.mouse_pos = pygame.mouse.get_pos()
-
-    for event in pygame.event.get():
+    obj.events = pygame.event.get()
+    for event in obj.events:
         if event.type == pygame.QUIT: sys.exit()
 
     keys = pygame.key.get_pressed()
@@ -22,6 +22,8 @@ def key_press_manager(obj):
     [pygame.K_z, "z"],
     [pygame.K_1, "1"],
     [pygame.K_2, "2"],
+    [pygame.K_RETURN, "enter"],
+    [pygame.K_BACKSPACE, "backspace"],
 
     [pygame.K_ESCAPE, "esc"]
     ]:
