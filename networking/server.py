@@ -31,11 +31,34 @@ def threaded_client(conn):
             if players[conn]["username"] == "":
                 players[conn]["username"] = reply
                 players[conn]["team"] = teams[len(players)-1]
+                players[conn]["team"].name = players[conn]["username"]
                 print(f"Assigned player {reply} to {teams[len(players)-1].color}")
 
             elif reply[:6] == "PACKET":
-                time.sleep(1)
-                conn.send(str.encode(reply))
+                time.sleep(0.1)
+                for individual_packet in reply.split("END#"):
+                    for line in individual_packet.split("\n"):
+                        if line == "PACKET" or line == "/" or line == "":
+                            continue
+                        for x in players:
+                            if x == conn:
+                                continue
+                            players[x]["data"].append(line)
+                            print("Saved line for", players[x]["team"].name)
+                            print(">>> ", line)
+
+                if players[conn]["data"] != []:
+
+                    data = "PACKET\n"
+                    for line_2 in players[conn]["data"]:
+                        data += line_2 + "\n"
+                        players[conn]["data"].remove(line_2)
+                        print("FOUND LINE:", players[conn]["username"], line_2)
+                    data += "END#"
+                    print(f"{data}")
+                else:
+                    data = "ok"
+                conn.send(str.encode(data))
 
             elif "STARTGAME" in reply.split("/"):
                 print("STARTING GAME!")
@@ -113,7 +136,8 @@ def server_run():
         players[conn] = {
             "username": "",
             "team" : placeholder,
-            "ingame" : False
+            "ingame" : False,
+            "data" : []
         }
         print("SERVER: CREATING A THREAD TO", addr)
 

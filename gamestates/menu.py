@@ -22,7 +22,7 @@ class Menu:
     def __init__(self, game):
         self.game_ref = game
         self.name_box = TextBox(self.game_ref, [250, 20], f"Runkkari{random.randint(0,100)}")
-        self.ip_box = TextBox(self.game_ref, [250, 70], "", secret=False)
+        self.ip_box = TextBox(self.game_ref, [250, 70], "25.90.55.6", secret=False)
         self.host = Button(
             self.game_ref,
             None,
@@ -102,6 +102,8 @@ class Menu:
                 y[2]
                 )
 
+
+
             self.game_ref.connected_players.append(team)
             if y[0] == self.name_box.text and self.game_ref.player_team == placeholder:
                 print("Assigning to player team")
@@ -143,6 +145,8 @@ class Menu:
     def kill_network(self, null):
         self.game_ref.network.send("kill")
         self.game_ref.network = None
+
+
 
     def start_game(self, null):
 

@@ -14,6 +14,8 @@ class Game_Object:
         self.size = [100 * (size[0]), 100 * (size[1])]
         self.slot_size = size
 
+        self.id = random.randint(0,2**16)
+
         self.classname = self.name.replace(" ", "")
         self.active = False
         self.route_to_pos = [[0, 0]]
@@ -29,6 +31,9 @@ class Game_Object:
         self.shots_per_round = 1
         self.shots = 1
         self.act_gt = self.game_ref.GT(20, oneshot=True)
+
+    def __str__(self):
+        return f"{self.classname} {self.team.name} {self.slot} {self.id}"
 
     def slot_to_pos(self):
         return self.game_ref.get_pos([self.slot[0] * 100, self.slot[1] * 100])
@@ -66,8 +71,40 @@ class Game_Object:
         ):
             self.shootables.append(x)
 
+
+    def set_dict(self, list):
+        for x in list:
+            self.__dict__[x] = list[x]
+
+    def get_dict(self, list):
+        list2 = {}
+        for x in list:
+            list2[x] = self.__dict__[x]
+        return list2
+
+    def exec_on_obj(self, id, exec):
+        self.game_ref.datagatherer.data.append(f"self.game_ref.find_object_id({id}).{exec}")
+
+
+    def send_info(self, list, id_override = False):
+
+        if id_override:
+            obj = self.game_ref.find_object_id(id_override)
+        else:
+            obj = self
+
+        info = obj.get_dict(list)
+
+        self.game_ref.datagatherer.data.append(f"self.game_ref.find_object_id({obj.id}).set_dict({info})")
+
+
     def center_slot(self):
         return [self.slot[0] + self.slot_size[0], self.slot[1] + self.slot_size[1]]
+
+    def hp_change(self, amount):
+        self.hp += amount
+        if self.hp <= 0:
+            self.kill()
 
     def highlight_enemies(self):
         for obj in self.shootables:
@@ -97,9 +134,11 @@ class Game_Object:
 
                 if "mouse2" in self.game_ref.keypress:
                     self.shots -= 1
-                    obj.hp -= 50
-                    if obj.hp <= 0:
-                        obj.kill()
+                    obj.hp_change(-50)
+
+                    self.exec_on_obj(obj.id, "hp_change(-50)")
+
+
 
     def tick_queue(self):
 
@@ -167,6 +206,7 @@ class Game_Object:
         )
 
     def check_los(self):
+        return True
         x, y = self.slot_to_pos_center()
         pxarray = pygame.PixelArray(self.game_ref.los_image)
         if pxarray[int(x), int(y)] == 0:
@@ -301,6 +341,8 @@ class Game_Object:
         if not self.check_los():
             return
 
+
+
         x, y = self.slot_to_pos()
 
         if (
@@ -309,6 +351,11 @@ class Game_Object:
             and "mouse0" in self.game_ref.keypress
         ):
             print("CLICKED")
+
+            if self.team != self.game_ref.player_team:
+                print(self.game_ref.player_team.__dict__)
+                print(self.team.__dict__)
+                return
 
             if not self.active:
                 self.activate()
@@ -389,6 +436,7 @@ class Game_Object:
                             self.moving_route = self.route_to_pos
                             self.activate(False)
                             self.move_tick.value = self.move_tick.max_value
+                            self.send_info(["moving_route"])
 
                 elif self.slot != slot:
 

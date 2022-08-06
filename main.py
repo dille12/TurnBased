@@ -171,17 +171,26 @@ class Game:
             if connected_last == self.connected_in_scan:
                 break
 
-    def gen_object(self, type, send_info = True):
-        if send_info:
-            self.datagatherer.data.append("self.game_ref.gen_object(" + type.gen_string() + ", send_info = False)")
+    def set_turn(self, player):
+        pass
+
+    def gen_object(self, type, send_info = True, id = False):
+
+
+        if type.team.str_team == self.player_team.str_team:
+            type.team = self.player_team
+
         print("Generating object....")
+        obj = type.copy()
+        if id:
+            obj.id = id
         if type.type == "npc":
-
-            self.render_layers["4.NPCS"].append(type.copy())
-
+            self.render_layers["4.NPCS"].append(obj)
         else:
+            self.render_layers["3.BUILDINGS"].append(obj)
 
-            self.render_layers["3.BUILDINGS"].append(type.copy())
+        if send_info:
+            self.datagatherer.data.append(f"self.game_ref.gen_object({type.gen_string()}, send_info = False, id = {obj.id})")
 
     def renderobjects(self):
 
@@ -205,12 +214,15 @@ class Game:
                 continue
 
             if x == "LOS":
-                self.screen.blit(self.los_image, minus([0, 0], self.camera_pos, op="-"))
+                #self.screen.blit(self.los_image, minus([0, 0], self.camera_pos, op="-"))
                 continue
 
             for obj in self.render_layers[x]:
                 if obj != self.activated_object:
                     obj.tick()
+
+    def find_object_id(self, id):
+        return [x for x in self.return_objects() if x.id == id][0]
 
     def return_objects(self, list=None):
         objects = []
@@ -321,6 +333,14 @@ class Game:
 
         self.screen.blit(self.surf, [x - 300, y - 100])
 
+        render_text(
+            self,
+            self.player_team.name,
+            [x - 500, y - 91],
+            21,
+            color=self.player_team.color,
+        )
+
         if self.player_team.g == 0:
             return
 
@@ -339,6 +359,8 @@ class Game:
 
         self.screen.blit(self.player_team.nrg, [x - 300, y - 100])
         self.screen.blit(self.images["nrg_icon"], [x - 290, y - 100])
+
+
 
         #
 

@@ -6,3 +6,6 @@ class Player:
         self.g = 0
         self.c = 0
         self.str_team = str_team
+
+    def __str__(self):
+        return f"{self.color} {self.name} {self.str_team}"

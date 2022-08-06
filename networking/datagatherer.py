@@ -21,9 +21,11 @@ class DataGatherer:
 
     def parse(self, data):
 
+        print("Parsing data...")
+
         for individual_packet in data.split("END#"):
             for line in individual_packet.split("\n"):
-                if line == "PACKET" or "/":
+                if line == "PACKET" or line == "/":
                     continue
                 try:
                     print("Evaluating line", line)
@@ -41,15 +43,18 @@ class DataGatherer:
     def threaded_data_gather(self):
         self.gathering = True
         t = time.time()
-
         packet = f"PACKET\n"
         for x in self.data:
             packet += x + "\n"
             self.data.remove(x)
         packet += "END#"
 
+        #print(f"Sending from player {self.player_team.name}\n{packet}")
+
         reply = self.game_ref.network.send(packet)
 
-        self.parse(reply)
+        if reply != "ok" and reply != "/":
+            print("Received packet:\n", reply)
+            self.parse(reply)
 
         self.gathering = False
