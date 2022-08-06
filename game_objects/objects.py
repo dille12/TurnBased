@@ -206,12 +206,12 @@ class Base(Building):
         hp = 1000
         name = "Base"
 
+        print("Generating a base to ", slot, team.color, team.name)
+
         self.select_sound = game.sounds["select_base"]
         self.buildtime = 1
         self.energy_generation = 5
         self.energy_consumption = 0
-
-        print("BASE: type", type(self).__dict__)
 
         image = game.images["base"].copy()
         size = [2, 2]

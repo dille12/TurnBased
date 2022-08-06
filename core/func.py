@@ -107,7 +107,6 @@ def get_shortest_route(point, routes):
                 if x == point:
                     if len(complete_route) > len(temp):
                         complete_route = temp
-                        print(temp)
                     break
 
     return complete_route

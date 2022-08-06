@@ -175,7 +175,6 @@ class Building(Game_Object):
             self.render_buildable(occ_slots)
 
     def tick(self):
-
         self.los()
 
         self.click()

@@ -14,6 +14,7 @@ class Game_Object:
         self.size = [100 * (size[0]), 100 * (size[1])]
         self.slot_size = size
 
+        self.classname = self.name.replace(" ", "")
         self.active = False
         self.route_to_pos = [[0, 0]]
         self.team = team
@@ -36,14 +37,9 @@ class Game_Object:
         return [round(pos[0] / 100 - 0.5), round(pos[1] / 100 - 0.5)]
 
     def check_mode(self):
-        print("Checking")
-
-        print(self.buttons)
         for x in self.buttons:
-            print(x.active, x.activator)
             if x.active and x.activator != "":
                 self.mode = x.activator
-                print("set as", self.mode)
                 if self.mode == "walk":
                     self.routes = self.scan_movement(self.turn_movement)
                 return
@@ -294,6 +290,12 @@ class Game_Object:
         angle = math.degrees(math.atan2(self.pos, target))
         image_rot, rect = core.func.rot_center(self.image, angle, 0, 0)
 
+
+    def gen_string(self):
+
+        return f"{self.classname}(self.game_ref, {self.team.str_team}, {self.slot})"
+
+
     def click(self):
 
         if not self.check_los():
@@ -369,7 +371,6 @@ class Game_Object:
                             self.route_to_pos = core.func.get_shortest_route(
                                 slot, self.routes
                             )
-                            print("Calculated new")
 
                         last_x_y = core.func.minus(self.slot.copy(), [0.5, 0.5])
 

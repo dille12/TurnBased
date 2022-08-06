@@ -20,6 +20,7 @@ from hud_elements.button import *
 import gamestates.battle
 import gamestates.menu
 import socket
+from networking.datagatherer import DataGatherer
 
 
 class Game:
@@ -33,6 +34,8 @@ class Game:
         pygame.font.init()
 
         self.GT = GameTick
+
+        self.datagatherer = DataGatherer(self)
 
         self.resolution = resolution
 
@@ -51,8 +54,9 @@ class Game:
         self.camera_pos = [0, 0]
         self.prev_pos = [0, 0]
         self.camera_pos_target = [0, 0]
-
-        self.player_team = blue_t
+        self.error_message = None
+        self.player_team = placeholder
+        self.connected_players = []
 
         self.qsc = 1920 / resolution[0]
 
@@ -65,8 +69,7 @@ class Game:
 
         self.state = gamestates.menu.Menu(self)
 
-        for x in [blue_t, red_t]:
-            x.nrg = colorize(self.images["nrg"], pygame.Color(x.color))
+
 
         print(self.images)
         print(self.sounds)
@@ -88,8 +91,8 @@ class Game:
             "5.CABLE": [],
             "6.HUD": [],
         }
-        # self.render_layers["3.BUILDINGS"].append(Building(self,GREEN,"Base",[3,3], image = self.images["base"].copy(), size = [2,2]))
-        # self.render_layers["3.BUILDINGS"].append(Base(self, blue_t, [1,1]))
+        #self.render_layers["3.BUILDINGS"].append(Building(self,green_t,"Base",[3,3], image = self.images["base"].copy(), size = [2,2]))
+        #self.render_layers["3.BUILDINGS"].append(Base(self, blue_t, [1,1]))
         # self.render_layers["3.BUILDINGS"].append(Base(self, red_t, [22,22]))
         #
         # self.render_layers["4.NPCS"].append(Builder(self, blue_t, [3,2]))
@@ -168,8 +171,10 @@ class Game:
             if connected_last == self.connected_in_scan:
                 break
 
-    def gen_object(self, type):
-
+    def gen_object(self, type, send_info = True):
+        if send_info:
+            self.datagatherer.data.append("self.game_ref.gen_object(" + type.gen_string() + ", send_info = False)")
+        print("Generating object....")
         if type.type == "npc":
 
             self.render_layers["4.NPCS"].append(type.copy())
@@ -315,6 +320,9 @@ class Game:
             )
 
         self.screen.blit(self.surf, [x - 300, y - 100])
+
+        if self.player_team.g == 0:
+            return
 
         pygame.draw.rect(
             self.screen,

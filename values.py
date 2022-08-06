@@ -1,15 +1,21 @@
 from core.player import Player
 
 BLACK = [0, 0, 0]
+WHITE = [255,255,255]
 BLUE = [51, 102, 255]
 RED = [255, 0, 102]
 GREEN = [153, 255, 51]
 YELLOW = [255, 204, 102]
 CYAN = [51, 204, 204]
 
-blue_t = Player(BLUE, "Homo")
-red_t = Player(RED, "Runkkari")
-nature = Player(BLACK, "Nature")
+blue_t = Player(BLUE, "", "blue_t")
+red_t = Player(RED, "", "red_t")
+green_t = Player(GREEN, "", "green_t")
+yellow_t = Player(YELLOW, "", "yellow_t")
+nature = Player(BLACK, "Nature", "nature")
+
+
+placeholder = Player(WHITE, "", "placeholder")
 
 
 class GameTick:

@@ -2,7 +2,10 @@ import socket
 from _thread import *
 import sys
 import traceback
+from values import *
+import time
 
+teams = [blue_t, red_t, green_t, yellow_t]
 players = {}
 
 running = True
@@ -25,7 +28,35 @@ def threaded_client(conn):
             if stop_threads:
                 break
 
-            if reply == "kill":
+            if players[conn]["username"] == "":
+                players[conn]["username"] = reply
+                players[conn]["team"] = teams[len(players)-1]
+                print(f"Assigned player {reply} to {teams[len(players)-1].color}")
+
+            elif reply[:6] == "PACKET":
+                time.sleep(1)
+                conn.send(str.encode(reply))
+
+            elif "STARTGAME" in reply.split("/"):
+                print("STARTING GAME!")
+                for x in players:
+                    print("Sending", players[x]["username"], "to game ")
+                    players[x]["ingame"] = True
+                conn.send(str.encode("ok"))
+
+            elif reply == players[conn]["username"]:
+                if players[conn]["ingame"]:
+                    print("SENDING START GAME TO", players[conn]["username"])
+                    conn.send(str.encode("/STARTGAME/"))
+                else:
+                    rep = ""
+                    for x in players:
+                        rep += players[x]["username"] + "-" + str(players[x]["team"].color) + "-" + str(players[x]["team"].str_team) + "/"
+                    conn.send(str.encode(rep))
+
+
+
+            elif reply == "kill":
                 conn.sendall(str.encode("/"))
                 running = False
 
@@ -81,16 +112,8 @@ def server_run():
         print("SERVER: Connected to: ", addr)
         players[conn] = {
             "username": "",
-            "x": "0",
-            "y": "0",
-            "a": "0",
-            "hp": "100",
-            "bullets": [],
-            "grenades": [],
-            "zombies": [],
-            "z_events": [],
-            "turrets": [],
-            "barricades": [],
+            "team" : placeholder,
+            "ingame" : False
         }
         print("SERVER: CREATING A THREAD TO", addr)
 
