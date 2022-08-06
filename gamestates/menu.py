@@ -22,7 +22,7 @@ class Menu:
     def __init__(self, game):
         self.game_ref = game
         self.name_box = TextBox(self.game_ref, [250, 20], f"Runkkari{random.randint(0,100)}")
-        self.ip_box = TextBox(self.game_ref, [250, 70], "25.90.55.6", secret=False)
+        self.ip_box = TextBox(self.game_ref, [250, 70], self.game_ref.own_ip, secret=False)
         self.host = Button(
             self.game_ref,
             None,
