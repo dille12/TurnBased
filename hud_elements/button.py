@@ -71,9 +71,9 @@ class Button:
                 color=self.team,
             )
 
-        if (
+        if ((
             inside and "mouse0" in self.game_ref.keypress
-        ) or self.key_press in self.game_ref.keypress:
+        ) or self.key_press in self.game_ref.keypress) and self.game_ref.own_turn:
             self.game_ref.sounds["button"].stop()
             self.game_ref.sounds["button"].play()
 

@@ -14,6 +14,8 @@ class Battle:
     def __init__(self, game):
         self.game_ref = game
 
+        self.game_ref.turn = self.game_ref.connected_players[0]
+
         spawns = [[1,1],[22,22],[2,17],[20,6]]
 
         if self.game_ref.hosting_game:
@@ -47,7 +49,10 @@ class Battle:
         self.game_ref.screen.fill(BLACK)
         self.game_ref.renderobjects()
         self.game_ref.draw_HUD()
-        self.game_ref.next_turn_button.tick()
+        self.game_ref.own_turn = False
+        if self.game_ref.turn == self.game_ref.player_team:
+            self.game_ref.own_turn = True
+            self.game_ref.next_turn_button.tick()
 
         print_s(self.game_ref, f"FPS:{self.game_ref.fps}", 1)
         print_s(self.game_ref, f"IDLE:{self.game_ref.idle}%", 2)

@@ -206,7 +206,6 @@ class Game_Object:
         )
 
     def check_los(self):
-        return True
         x, y = self.slot_to_pos_center()
         pxarray = pygame.PixelArray(self.game_ref.los_image)
         if pxarray[int(x), int(y)] == 0:
@@ -432,7 +431,7 @@ class Game_Object:
                             )
                             last_x_y = pos.copy()
 
-                        if "mouse2" in self.game_ref.keypress:
+                        if "mouse2" in self.game_ref.keypress and self.game_ref.own_turn:
                             self.moving_route = self.route_to_pos
                             self.activate(False)
                             self.move_tick.value = self.move_tick.max_value

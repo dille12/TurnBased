@@ -110,10 +110,10 @@ class Game:
             8.5,
             self.player_team.color,
             self.images["nextturn"],
-            oneshot="walk",
-            oneshot_func=self.next_turn,
+            oneshot=True,
+            oneshot_func=self.end_turn,
         )
-
+        self.own_turn = True
         self.keypress = []
         self.keypress_held_down = []
         self.cam_moving = False
@@ -129,7 +129,7 @@ class Game:
     def get_pos_rev(self, pos):
         return minus(minus(pos, self.camera_pos, op="+"), self.size_conv, op="/")
 
-    def next_turn(self, arg):
+    def begin_turn(self):
         self.los_image.fill([0, 0, 0])
         for x in self.return_objects():
 
@@ -143,6 +143,36 @@ class Game:
             if hasattr(x, "c_build_time"):
                 if x.c_build_time > 0:
                     x.c_build_time -= 1
+
+    def end_turn(self, arg):
+        for i, x in enumerate(self.connected_players):
+            if x == self.player_team:
+
+                if i == len(self.connected_players) - 1:
+                    next_player = self.connected_players[0]
+                else:
+                    next_player = self.connected_players[i+1]
+
+                self.set_turn(next_player.str_team, send_info = True)
+                print("Next turn is", next_player)
+
+                return
+
+    def set_turn(self, player, send_info = False):
+        for x in self.connected_players:
+            if x.str_team == player:
+                self.turn = x
+
+                if send_info:
+                    self.datagatherer.data.append(f"self.game_ref.set_turn(\"{x.str_team}\")")
+
+                if self.player_team.str_team == x.str_team:
+                    print("own turn")
+                    self.begin_turn()
+                return
+
+
+
 
     def slot_inside(self, slot):
         return 0 <= slot[0] < self.size_slots[0] and 0 <= slot[1] < self.size_slots[1]
@@ -171,8 +201,8 @@ class Game:
             if connected_last == self.connected_in_scan:
                 break
 
-    def set_turn(self, player):
-        pass
+
+
 
     def gen_object(self, type, send_info = True, id = False):
 
@@ -214,7 +244,7 @@ class Game:
                 continue
 
             if x == "LOS":
-                #self.screen.blit(self.los_image, minus([0, 0], self.camera_pos, op="-"))
+                self.screen.blit(self.los_image, minus([0, 0], self.camera_pos, op="-"))
                 continue
 
             for obj in self.render_layers[x]:
