@@ -57,6 +57,9 @@ class Game:
         self.error_message = None
         self.player_team = placeholder
         self.connected_players = []
+        self.notification_tick = self.GT(180, oneshot = True)
+        self.notification = ""
+        self.notification_color = [255,255,255]
 
         self.qsc = 1920 / resolution[0]
 
@@ -129,6 +132,11 @@ class Game:
     def get_pos_rev(self, pos):
         return minus(minus(pos, self.camera_pos, op="+"), self.size_conv, op="/")
 
+    def set_notification(self, text, color = [255,255,255]):
+        self.notification_color = color
+        self.notification = text
+        self.notification_tick.value = 0
+
     def begin_turn(self):
         self.los_image.fill([0, 0, 0])
         for x in self.return_objects():
@@ -153,6 +161,7 @@ class Game:
                 else:
                     next_player = self.connected_players[i+1]
 
+
                 self.set_turn(next_player.str_team, send_info = True)
                 print("Next turn is", next_player)
 
@@ -169,7 +178,25 @@ class Game:
                 if self.player_team.str_team == x.str_team:
                     print("own turn")
                     self.begin_turn()
+                self.sounds["turn_change"].stop()
+                self.sounds["turn_change"].play()
+                self.set_notification(f"{x.name}'s turn", color = x.color)
+
                 return
+
+    def tick_alert(self):
+        if not self.notification_tick.tick() and self.notification_tick.value > 20:
+            tick = self.notification_tick.value - 20
+            alpha = 255
+            if tick < 40:
+                alpha = 255 * tick/40
+
+            elif 160 > tick > 100:
+                alpha = 255 * (160 - tick)/60
+
+            text = self.terminal[60].render(self.notification, False, self.notification_color)
+            text.set_alpha(alpha)
+            self.screen.blit(text, [self.resolution[0]/2 - text.get_rect().center[0], self.resolution[1]/3 - text.get_rect().center[1]])
 
 
 

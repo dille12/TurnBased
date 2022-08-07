@@ -54,5 +54,7 @@ class Battle:
             self.game_ref.own_turn = True
             self.game_ref.next_turn_button.tick()
 
+        self.game_ref.tick_alert()
+
         print_s(self.game_ref, f"FPS:{self.game_ref.fps}", 1)
         print_s(self.game_ref, f"IDLE:{self.game_ref.idle}%", 2)
