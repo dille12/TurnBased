@@ -116,6 +116,8 @@ class Building(Game_Object):
                     break
 
             if "mouse2" not in self.game_ref.keypress_held_down:
+                if self.cable:
+                    self.game_ref.sounds["cable_c"].play()
                 self.cable = None
 
             if self.cable != None:
@@ -131,6 +133,9 @@ class Building(Game_Object):
                     self.slot[1] + y_1,
                 ] in occ_slots or not self.game_ref.slot_inside(self.slot):
                     unplaceable = True
+        if not unplaceable:
+            if not self.check_los():
+                unplaceable = True
 
         x, y = self.slot_to_pos()
         if unplaceable:
@@ -196,3 +201,4 @@ class Building(Game_Object):
         self.tick_queue()
         self.tick_cable()
         self.create_cable()
+        self.create_spark()

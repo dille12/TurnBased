@@ -24,6 +24,8 @@ class Menu:
         self.name_box = TextBox(self.game_ref, [250, 20], f"Runkkari{random.randint(0,100)}")
         self.ip_box = TextBox(self.game_ref, [250, 70], self.game_ref.own_ip, secret=False)
         self.threading = False
+        self.glitch_amount = 2
+        self.menu_text = "MAIN MENU"
         self.host = Button(
             self.game_ref,
             None,
@@ -203,3 +205,9 @@ class Menu:
                 self.game_ref.error_message = None
         else:
             self.error_time = time.time()
+        if "mouse0" in self.game_ref.keypress:
+            self.glitch_amount = 30
+
+        render_text_glitch(self.game_ref, self.menu_text, [self.game_ref.resolution[0]/2,20],100, centerx = True, glitch = self.glitch_amount)
+        if self.glitch_amount >= 4:
+            self.glitch_amount -= 1

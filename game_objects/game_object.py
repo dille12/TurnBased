@@ -5,6 +5,8 @@ import time
 import math
 import random
 
+from game_objects.particles.spark import Spark
+
 
 class Game_Object:
     def __init__(self, game, team, name="obj", slot=None, hp=100, size=[1, 1]):
@@ -27,7 +29,7 @@ class Game_Object:
         self.build_queue = []
         self.c_build_time = 0
         self.connected_to_base = False
-        self.los_rad = 400
+        self.los_rad = 250
 
         self.shots_per_round = 1
         self.shots = 1
@@ -138,6 +140,21 @@ class Game_Object:
                     obj.hp_change(-50)
 
                     self.exec_on_obj(obj.id, "hp_change(-50)")
+
+    def connected_building(self):
+        return self.connected_to_base or self.name == "Base"
+
+    def create_spark(self):
+        if random.uniform(0,1) > 0.04 or not self.connected_building():
+            return
+        token = random.randint(0,1)
+        if token:
+            x = random.uniform(self.slot[0]*100, (self.slot[0] + self.slot_size[0])*100)
+            y = self.slot[1]*100 + random.randint(0,1) * self.slot_size[1]*100
+        else:
+            x = self.slot[0]*100 + random.randint(0,1) * self.slot_size[0]*100
+            y = random.uniform(self.slot[1]*100, (self.slot[1] + self.slot_size[1])*100)
+        self.game_ref.render_layers["PARTICLES"].append(Spark(self.game_ref, [x,y],[random.uniform(-3,3), random.uniform(-3,3)]))
 
 
 
@@ -390,7 +407,7 @@ class Game_Object:
     def deactivate_other(self):
         print("Deactivating other from", self)
         for x in self.game_ref.render_layers.keys():
-            for obj in self.game_ref.render_layers[x]:
+            for obj in self.game_ref.return_objects(["3.BUILDINGS","4.NPCS"]):
                 if obj != self:
                     obj.activate(False)
 

@@ -6,6 +6,7 @@ from game_objects.npc import *
 from game_objects.building import *
 from game_objects.wall import *
 from game_objects.deposit import *
+from game_objects.mine import *
 from values import *
 import sys
 from core.keypress import *
@@ -88,13 +89,14 @@ class Game:
         # self.los_image.set_alpha(100)
         self.los_image.set_colorkey([255, 255, 255])
 
-        self.size_slots, tiles, self.deposits = gen_map(self.images["layout"])
+        self.size_slots, tiles, self.deposits, self.mines = gen_map(self.images["layout"])
 
         self.render_layers = {
             "1.BOTTOM": [],
             "2.ORE": [],
             "3.BUILDINGS": [],
             "4.NPCS": [],
+            "PARTICLES" : [],
             "5.CABLE": [],
             "6.HUD": [],
         }
@@ -106,6 +108,8 @@ class Game:
 
         for x in self.deposits:
             self.render_layers["1.BOTTOM"].append(Deposit(self, nature, "Wall", x))
+        for x in self.mines:
+            self.render_layers["1.BOTTOM"].append(Mine(self, nature, "Wall", x))
 
         for x in tiles:
             self.render_layers["1.BOTTOM"].append(Wall(self, nature, "Wall", x))
@@ -201,7 +205,7 @@ class Game:
             elif 160 > tick > 100:
                 alpha = 255 * (160 - tick)/60
 
-            text = self.terminal[60].render(self.notification, False, self.notification_color)
+            text = self.terminal[100].render(self.notification, False, self.notification_color)
             text.set_alpha(alpha)
             self.screen.blit(text, [self.resolution[0]/2 - text.get_rect().center[0], self.resolution[1]/3 - text.get_rect().center[1]])
 
@@ -271,6 +275,7 @@ class Game:
             "2.ORE",
             "3.BUILDINGS",
             "4.NPCS",
+            "PARTICLES",
             "5.CABLE",
             "LOS",
             "activated",
@@ -360,7 +365,7 @@ class Game:
         hud_transpose = 0
         if self.activated_object != None:
             hud_transpose = self.activated_object.smoothing
-            render_text(
+            render_text_glitch(
                 self,
                 self.activated_object.name,
                 [17, 20 - hud_transpose],

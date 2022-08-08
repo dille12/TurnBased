@@ -248,30 +248,7 @@ class Base(Building):
                 oneshot_func=self.purchase,
                 argument=Builder(self.game_ref, self.team, [-1, -1]),
             ),
-            Button(
-                self.game_ref,
-                self,
-                0.5,
-                3.5,
-                self.team.color,
-                self.game_ref.images["soldier"],
-                key_press="2",
-                oneshot=True,
-                oneshot_func=self.purchase,
-                argument=Soldier(self.game_ref, self.team, [-1, -1]),
-            ),
-            Button(
-                self.game_ref,
-                self,
-                0.5,
-                5,
-                self.team.color,
-                self.game_ref.images["saboteur"],
-                key_press="3",
-                oneshot=True,
-                oneshot_func=self.purchase,
-                argument=Saboteur(self.game_ref, self.team, [-1, -1]),
-            ),
+
         ]
         if self.team == self.game_ref.player_team:
             print("CENTERING IN START")
@@ -304,7 +281,7 @@ class ElectricTower(Building):
 
 class Barracks(Building):
     def __init__(self, game, team, slot):
-        hp = 200
+        hp = 350
         name = "Barracks"
         image = game.images["barracks"].copy()
         self.select_sound = game.sounds["select_barracks"]
@@ -314,7 +291,36 @@ class Barracks(Building):
         self.energy_generation = 0
         self.energy_consumption = 4
 
+
+
         super().__init__(game, team, name, slot, size=size, hp=hp, image=image)
+
+        self.buttons = [
+            Button(
+                self.game_ref,
+                self,
+                0.5,
+                2,
+                self.team.color,
+                self.game_ref.images["soldier"],
+                key_press="1",
+                oneshot=True,
+                oneshot_func=self.purchase,
+                argument=Soldier(self.game_ref, self.team, [-1, -1]),
+            ),
+            Button(
+                self.game_ref,
+                self,
+                0.5,
+                3.5,
+                self.team.color,
+                self.game_ref.images["saboteur"],
+                key_press="2",
+                oneshot=True,
+                oneshot_func=self.purchase,
+                argument=Saboteur(self.game_ref, self.team, [-1, -1]),
+            ),
+        ]
 
         self.desc = "Produces military units."
 

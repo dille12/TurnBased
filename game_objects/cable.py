@@ -117,6 +117,7 @@ class Point:
         self.prevpos = point
         self.locked = locked
         self.connecting = False
+        self.render_light = False
 
     def render(self, screen):
         if self.locked:
@@ -136,6 +137,7 @@ class Stick:
         self.point1 = point1
         self.point2 = point2
         self.length = np.linalg.norm(self.point1.pos - self.point2.pos)
+
 
     def render(self, screen, color):
         pygame.draw.line(screen, color, self.point1.pos, self.point2.pos, 4)

@@ -2,7 +2,6 @@ import pygame
 from main import Game
 import time
 import socket
-
 game = Game([1920, 1080])
 
 # game = Game([640,360])
