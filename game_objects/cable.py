@@ -2,10 +2,10 @@ from game_objects.game_object import Game_Object
 import pygame
 import numpy as np
 from core.func import *
-
+import time
 
 class Cable(Game_Object):
-    def __init__(self, game, team, game_tick):
+    def __init__(self, game, team, game_tick, dont_freeze = False):
         self.points = []
         self.sticks = []
         self.game_tick = game_tick(30)
@@ -15,6 +15,10 @@ class Cable(Game_Object):
         self.slot_size = [0, 0]
         self.slot = [-1, -1]
         self.type = "cable"
+        self.id = -1
+        self.freeze_tick = game_tick(150, oneshot = True)
+        self.dont_freeze = dont_freeze
+        self.frozen = False
 
     def tick(self):
         self.camera_pos = self.game_ref.delta
@@ -66,6 +70,7 @@ class Cable(Game_Object):
         self.end_obj = end_obj
 
         print("Cable generated")
+        return self
 
     def Simulate(self):
         for point in self.points:
@@ -75,13 +80,25 @@ class Cable(Game_Object):
                 point.prevpos += self.camera_pos
                 pos_before = point.pos.copy()
                 point.pos += point.pos - point.prevpos
-
-                point.pos += np.array([0, 1])
+                if not self.frozen:
+                    point.pos += np.array([0, 1])
                 point.prevpos = pos_before.copy()
             else:
                 point.pos += self.camera_pos
 
-        for i in range(3):
+        if self.freeze_tick.tick() and not self.dont_freeze:
+            self.frozen = True
+            for point in self.points:
+                point.prevpos = point.pos.copy()
+            return
+        else:
+            r = 3
+
+
+
+
+
+        for i in range(r):
             for stick in self.sticks:
                 stick_centre = (stick.point1.pos + stick.point2.pos) / 2
                 stick_dir = normalize(stick.point1.pos - stick.point2.pos)
@@ -89,6 +106,9 @@ class Cable(Game_Object):
                     stick.point1.pos = stick_centre + stick_dir * stick.length / 2
                 if not stick.point2.locked:
                     stick.point2.pos = stick_centre - stick_dir * stick.length / 2
+
+
+
 
 
 class Point:

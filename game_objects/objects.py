@@ -178,6 +178,7 @@ class Builder(NPC):
                 self.game_ref.images["elec_tower"],
                 oneshot=True,
                 key_press="1",
+                scale = True,
                 oneshot_func=self.npc_build,
                 argument=ElectricTower(self.game_ref, self.team, [-1, -1]),
             ),
@@ -190,9 +191,23 @@ class Builder(NPC):
                 self.game_ref.images["energywell"],
                 oneshot=True,
                 key_press="2",
+                scale = True,
                 oneshot_func=self.npc_build,
                 argument=EnergyWell(self.game_ref, self.team, [-1, -1]),
-            )
+            ),
+            Button(
+                self.game_ref,
+                self,
+                0.5,
+                5,
+                self.team.color,
+                self.game_ref.images["barracks"],
+                oneshot=True,
+                key_press="3",
+                scale = True,
+                oneshot_func=self.npc_build,
+                argument=Barracks(self.game_ref, self.team, [-1, -1]),
+            ),
             # Button(self.game_ref, self, 3.5,9, self.team.color, self.game_ref.images["shield"], activator = "defend", key_press = "d")
         ]
         self.check_mode()
@@ -286,6 +301,25 @@ class ElectricTower(Building):
 
     def copy(self):
         return ElectricTower(self.game_ref, self.team, self.slot)
+
+class Barracks(Building):
+    def __init__(self, game, team, slot):
+        hp = 200
+        name = "Barracks"
+        image = game.images["barracks"].copy()
+        self.select_sound = game.sounds["select_barracks"]
+        size = [2, 2]
+        self.range = 0
+        self.buildtime = 1
+        self.energy_generation = 0
+        self.energy_consumption = 4
+
+        super().__init__(game, team, name, slot, size=size, hp=hp, image=image)
+
+        self.desc = "Produces military units."
+
+    def copy(self):
+        return Barracks(self.game_ref, self.team, self.slot)
 
 
 class EnergyWell(Building):

@@ -20,6 +20,7 @@ class Game_Object:
         self.active = False
         self.route_to_pos = [[0, 0]]
         self.team = team
+        self.hp_max = hp
         self.hp = hp
         self.buttons = []
         self.mode = ""
@@ -304,25 +305,48 @@ class Game_Object:
                     self.game_ref.screen,
                     self.team.color,
                     [
-                        x + 5 + x_1 * round(93 / self.movement_range),
-                        y + 5 + 92,
-                        round(93 / self.movement_range) - 3,
+                        x + 5 + 92,
+                        y + 5 + x_1 * round(93 / self.movement_range),
                         6,
+                        round(93 / self.movement_range) - 10
                     ],
                 )
 
-        if hasattr(self, "turn_movement"):
-            for x_1 in range(self.shots):
                 pygame.draw.rect(
                     self.game_ref.screen,
-                    [255, 0, 0],
+                    core.func.mult(self.team.color, 0.5),
                     [
-                        x + 5 + x_1 * round(93 / self.shots),
-                        y + 5 + 100,
-                        round(93 / self.shots_per_round) - 3,
+                        x + 5 + 92,
+                        y + 5 + x_1 * round(93 / self.movement_range),
                         6,
+                        round(93 / self.movement_range) - 10
                     ],
+                    1
                 )
+
+        if self.team != nature:
+            pygame.draw.rect(
+                self.game_ref.screen,
+                self.team.color,
+                [
+                    x + 5,
+                    y + 5 + self.size[1],
+                    round(self.size[0]*0.95 * self.hp/self.hp_max),
+                    6
+                ]
+            )
+
+            pygame.draw.rect(
+                self.game_ref.screen,
+                core.func.mult(self.team.color, 0.5),
+                [
+                    x + 3,
+                    y + 3 + self.size[1],
+                    round(self.size[0] * 0.95)+4,
+                    10
+                ],
+                1
+            )
 
     def rotate(self, target):
 

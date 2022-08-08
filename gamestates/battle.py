@@ -32,6 +32,8 @@ class Battle:
         for x in self.game_ref.connected_players:
             x.nrg = colorize(self.game_ref.images["nrg"], pygame.Color(x.color))
 
+        pygame.mixer.music.stop()
+
     def tick(self):
         self.game_ref.calc_energy()
 

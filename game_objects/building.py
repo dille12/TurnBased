@@ -37,7 +37,7 @@ class Building(Game_Object):
             if point_inside(self.game_ref.mouse_pos, [x, y], self.size):
                 if self.cable == None and self.active == True:
                     self.game_ref.sounds["cable_s"].play()
-                    self.cable = Cable(self.game_ref, self.team.color, self.game_ref.GT)
+                    self.cable = Cable(self.game_ref, self.team.color, self.game_ref.GT, dont_freeze = True)
                     self.cable.generate([x, y], self.game_ref.mouse_pos, 3, 4)
                 else:
                     self.cable = None
@@ -69,6 +69,7 @@ class Building(Game_Object):
                     and point_inside(
                         self.game_ref.mouse_pos, obj.slot_to_pos(), obj.size
                     )
+
                 ):
                     x, y = obj.slot_to_pos()
                     if self.game_ref.check_cable_availablity(self, obj):
@@ -95,6 +96,12 @@ class Building(Game_Object):
                                 start_obj=self,
                                 end_obj=obj,
                             )
+
+                            self.game_ref.datagatherer.data.append(f"self.game_ref.render_layers[\"5.CABLE\"].append(Cable(self.game_ref, {self.team.color}, self.game_ref.GT).generate(self.game_ref.find_object_id({self.id}).slot_to_pos_c_cam(),self.game_ref.find_object_id({obj.id}).slot_to_pos_c_cam(),0, 3, start_obj = self.game_ref.find_object_id({self.id}), end_obj = self.game_ref.find_object_id({obj.id})))")
+
+
+                            #
+
                             self.game_ref.render_layers["5.CABLE"].append(cable_temp)
                             self.game_ref.scan_connecting_cables()
                             print("Created static cable")

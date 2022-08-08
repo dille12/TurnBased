@@ -1,6 +1,7 @@
 from _thread import *
 import time
 import ast
+import traceback
 
 from game_objects.game_object import *
 from game_objects.npc import *
@@ -8,6 +9,8 @@ from game_objects.building import *
 from game_objects.wall import *
 from game_objects.deposit import *
 from game_objects.objects import *
+from game_objects.cable import *
+
 
 class DataGatherer:
     def __init__(self, game):
@@ -34,7 +37,7 @@ class DataGatherer:
                 except Exception as e:
                     print(line)
                     print("Exception:",e)
-
+                    print(traceback.print_exc())
 
 
 
@@ -53,7 +56,7 @@ class DataGatherer:
 
         reply = self.game_ref.network.send(packet)
 
-        if reply != "ok" and reply != "/":
+        if reply != "ok" and reply != "/" and reply != "ok/":
             print("Received packet:\n", reply)
             self.parse(reply)
 

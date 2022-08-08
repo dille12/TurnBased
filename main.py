@@ -39,6 +39,8 @@ class Game:
 
         self.resolution = resolution
 
+        self.generation_overflow_tick = self.GT(30)
+
         hostname = socket.gethostname()
         self.own_ip = socket.gethostbyname(hostname)
 
@@ -69,6 +71,8 @@ class Game:
         self.screen = pygame.display.set_mode(resolution, pygame.FULLSCREEN)
         load_images(self, self.size_conv)
         load_sounds(self)
+
+
 
         self.state = gamestates.menu.Menu(self)
 
@@ -138,11 +142,7 @@ class Game:
         self.notification_tick.value = 0
 
     def begin_turn(self):
-        self.los_image.fill([0, 0, 0])
         for x in self.return_objects():
-
-            if x.type == "building":
-                x.los()
 
             if hasattr(x, "turn_movement"):
                 x.turn_movement = x.movement_range
@@ -153,6 +153,13 @@ class Game:
                     x.c_build_time -= 1
 
     def end_turn(self, arg):
+
+        self.los_image.fill([0, 0, 0])
+        for x in self.return_objects():
+            if x.type == "building":
+                x.los()
+
+
         for i, x in enumerate(self.connected_players):
             if x == self.player_team:
 
@@ -236,6 +243,10 @@ class Game:
 
         if type.team.str_team == self.player_team.str_team:
             type.team = self.player_team
+            if type.type == "npc":
+                self.sounds["spawn"].stop()
+                self.sounds["spawn"].play()
+            type.center()
 
         print("Generating object....")
         obj = type.copy()
@@ -308,19 +319,26 @@ class Game:
         return slots
 
     def check_cable_availablity(self, start, end):
+
+
+
         if core.func.get_dist_points(start.center_slot(), end.center_slot()) >= 4.9:
             return False
+
         for x in self.return_objects(["5.CABLE"]):
             if (x.start_obj == start and x.end_obj == end) or (
                 x.start_obj == end and x.end_obj == start
             ):
                 return False
+
+
+
         return True
 
     def calc_energy(self):
         self.player_team.energy_consumption = 0
         self.player_team.energy_generation = 0
-        for x in (x for x in self.return_objects() if x.team == self.player_team):
+        for x in (x for x in self.return_objects() if x.team == self.player_team and (x.connected_to_base or x.name == "Base" or x.type == "npc")):
 
             for y in x.build_queue:
                 self.player_team.energy_consumption += y.energy_consumption
@@ -400,10 +418,16 @@ class Game:
 
         if self.player_team.g == 0:
             return
+        color = [255, 164, 0]
+        if self.player_team.energy_consumption > self.player_team.energy_generation:
+            self.generation_overflow_tick.tick()
+            if round(self.generation_overflow_tick.value/self.generation_overflow_tick.max_value) == 1:
+                color = [255,0,0]
+
 
         pygame.draw.rect(
             self.screen,
-            [255, 164, 0],
+            color,
             [
                 x - 300,
                 y - 50,
@@ -416,6 +440,17 @@ class Game:
 
         self.screen.blit(self.player_team.nrg, [x - 300, y - 100])
         self.screen.blit(self.images["nrg_icon"], [x - 290, y - 100])
+
+        if color == [255,0,0]:
+            render_text(
+                self,
+                f"OVERUSAGE!",
+                [x - 150, y - 25,],
+                25,
+                color=[255, 164, 0],
+                centerx = True,
+                centery = True
+            )
 
 
 

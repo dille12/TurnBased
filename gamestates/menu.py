@@ -23,6 +23,7 @@ class Menu:
         self.game_ref = game
         self.name_box = TextBox(self.game_ref, [250, 20], f"Runkkari{random.randint(0,100)}")
         self.ip_box = TextBox(self.game_ref, [250, 70], self.game_ref.own_ip, secret=False)
+        self.threading = False
         self.host = Button(
             self.game_ref,
             None,
@@ -70,6 +71,11 @@ class Menu:
         self.game_ref.network = None
         self.game_ref.hosting_game = False
 
+
+        pygame.mixer.music.load("sounds/music/game_loop.mp3")
+        pygame.mixer.music.set_volume(0.25)
+        pygame.mixer.music.play(-1)
+
     def lobby_host(self, thread, ip):
         print("SERVER STARTING")
         networking.server.server_run()
@@ -81,6 +87,7 @@ class Menu:
         return list
 
     def threaded_player_info_gathering(self):
+        self.threading = True
         reply = self.game_ref.network.send(self.name_box.text)
 
         if "STARTGAME" in reply.split("/"):
@@ -110,7 +117,7 @@ class Menu:
                 self.game_ref.player_team = team
 
 
-
+        self.threading = False
 
 
 
@@ -169,8 +176,8 @@ class Menu:
         if self.game_ref.hosting_game:
             render_text(self.game_ref, "(HOSTING)", [20, 70], 30)
             self.start.tick()
-
-        start_new_thread(self.threaded_player_info_gathering, ())
+        if not self.threading:
+            start_new_thread(self.threaded_player_info_gathering, ())
         i = 0
         for x in self.game_ref.connected_players:
             render_text(self.game_ref, x.name, [20, 130+i], 30, color = x.color)

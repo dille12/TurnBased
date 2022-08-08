@@ -18,15 +18,19 @@ class Button:
         active=False,
         argument=None,
         key_press="",
+        scale = False,
     ):
         self.x = slotx
         self.y = sloty
         self.game_ref = game
         self.parent_ref = obj
         self.team = team
-        self.image = image
+        if scale:
+            self.image = pygame.transform.scale(image.copy(),[100,100])
+        else:
+            self.image = image.copy()
         self.image2 = core.image_transform.colorize_alpha(
-            image.copy(), pygame.Color(0, 0, 0), 100
+            self.image.copy(), pygame.Color(0, 0, 0), 100
         )
         self.active = False
         self.oneshot = oneshot
