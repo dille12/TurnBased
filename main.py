@@ -30,10 +30,10 @@ class Game:
     Game class to contain all information for ease of access.
     """
 
-    def __init__(self, resolution):
+    def __init__(self, resolution, draw_los = True):
         pygame.init()
         pygame.font.init()
-
+        self.draw_los = draw_los
         self.GT = GameTick
 
         self.datagatherer = DataGatherer(self)
@@ -89,7 +89,7 @@ class Game:
         # self.los_image.set_alpha(100)
         self.los_image.set_colorkey([255, 255, 255])
 
-        self.size_slots, tiles, self.deposits, self.mines = gen_map(self.images["layout"])
+        gen_map(self, self.images["layout"])
 
         self.render_layers = {
             "1.BOTTOM": [],
@@ -108,10 +108,11 @@ class Game:
 
         for x in self.deposits:
             self.render_layers["1.BOTTOM"].append(Deposit(self, nature, "Wall", x))
-        for x in self.mines:
-            self.render_layers["1.BOTTOM"].append(Mine(self, nature, "Wall", x))
+        self.mine_positions = []
 
-        for x in tiles:
+
+
+        for x in self.tiles:
             self.render_layers["1.BOTTOM"].append(Wall(self, nature, "Wall", x))
 
         self.next_turn_button = Button(
@@ -132,6 +133,7 @@ class Game:
         self.activated_object = None
         self.fps = 0
         self.idle = 0
+        self.iridium_mined = 0
 
     def get_pos(self, pos):
         # return minus(pos,self.camera_pos, op = "-")
@@ -139,6 +141,10 @@ class Game:
 
     def get_pos_rev(self, pos):
         return minus(minus(pos, self.camera_pos, op="+"), self.size_conv, op="/")
+
+    def set_mines(self, mines):
+        self.mines = mines
+        gen_mines(self)
 
     def set_notification(self, text, color = [255,255,255]):
         self.notification_color = color
@@ -153,15 +159,16 @@ class Game:
             if hasattr(x, "shots"):
                 x.shots = x.shots_per_round
             if hasattr(x, "c_build_time"):
-                if x.c_build_time > 0:
+                if x.c_build_time > 0 and x.connected_building():
                     x.c_build_time -= 1
 
     def end_turn(self, arg):
-
-        self.los_image.fill([0, 0, 0])
-        for x in self.return_objects():
-            if x.type == "building":
-                x.los()
+        self.scan_connecting_cables()
+        if self.draw_los:
+            self.los_image.fill([0, 0, 0])
+            for x in self.return_objects():
+                if x.type == "building":
+                    x.los()
 
 
         for i, x in enumerate(self.connected_players):
@@ -197,6 +204,8 @@ class Game:
 
     def tick_alert(self):
         if not self.notification_tick.tick() and self.notification_tick.value > 20:
+            if self.notification == "":
+                return
             tick = self.notification_tick.value - 20
             alpha = 255
             if tick < 40:
@@ -205,9 +214,18 @@ class Game:
             elif 160 > tick > 100:
                 alpha = 255 * (160 - tick)/60
 
+
+
             text = self.terminal[100].render(self.notification, False, self.notification_color)
             text.set_alpha(alpha)
-            self.screen.blit(text, [self.resolution[0]/2 - text.get_rect().center[0], self.resolution[1]/3 - text.get_rect().center[1]])
+            size_1 = round(text.get_size()[1] * (alpha/255)**5 + 5)
+            surf = pygame.Surface((self.resolution[0], size_1)).convert()
+            surf.fill(core.func.mult(self.notification_color, (0.15)))
+            surf.set_alpha((alpha/255)**5 * 255)
+            pos = [self.resolution[0]/2 - text.get_rect().center[0], self.resolution[1]/3 - text.get_rect().center[1]]
+            self.screen.blit(surf, [0, pos[1] + text.get_size()[1]/2 - surf.get_size()[1]/2])
+
+            self.screen.blit(text, pos)
 
 
 
@@ -219,10 +237,11 @@ class Game:
         print("Scanning cablenetwork")
         self.connected_in_scan = 0
         for x in self.render_layers["3.BUILDINGS"]:
-            if x.name == "Base" and x.team == self.player_team:
-                print(x)
-                base = x
-                break
+            if x.team == self.player_team:
+                x.connected_to_base = False
+                if x.name == "Base":
+                    base = x
+                    x.connected_to_base = True
 
         for cable in self.render_layers["5.CABLE"]:
             cable.disconnect()
@@ -287,7 +306,8 @@ class Game:
                 continue
 
             if x == "LOS":
-                self.screen.blit(self.los_image, minus([0, 0], self.camera_pos, op="-"))
+                if self.draw_los:
+                    self.screen.blit(self.los_image, minus([0, 0], self.camera_pos, op="-"))
                 continue
 
             for obj in self.render_layers[x]:
@@ -319,27 +339,25 @@ class Game:
                         if (
                             core.func.minus(obj.slot, [x, y]) not in slots
                             and obj.type != "deposit"
+                            and obj.type != "mine"
                         ):
                             slots.append(core.func.minus(obj.slot, [x, y]))
         return slots
 
     def check_cable_availablity(self, start, end):
 
-
-
-        if core.func.get_dist_points(start.center_slot(), end.center_slot()) >= 4.9:
+        if core.func.get_dist_points(start.center_slot(), end.center_slot()) > 5:
             return False
 
+        return True
+
+    def cable_exists(self, start, end):
         for x in self.return_objects(["5.CABLE"]):
             if (x.start_obj == start and x.end_obj == end) or (
                 x.start_obj == end and x.end_obj == start
             ):
-                return False
-
-
-
-        return True
-
+                return x
+        return False
     def calc_energy(self):
         self.player_team.energy_consumption = 0
         self.player_team.energy_generation = 0
@@ -361,113 +379,7 @@ class Game:
             self.player_team.g, self.player_team.energy_generation
         )
 
-    def draw_HUD(self):
-        hud_transpose = 0
-        if self.activated_object != None:
-            hud_transpose = self.activated_object.smoothing
-            render_text_glitch(
-                self,
-                self.activated_object.name,
-                [17, 20 - hud_transpose],
-                80,
-                color=self.activated_object.team.color,
-            )
-            if self.activated_object.type == "npc":
-                render_text(
-                    self,
-                    f"Movement : {self.activated_object.turn_movement}/{self.activated_object.movement_range}",
-                    [20, 100 - hud_transpose],
-                    30,
-                    color=self.activated_object.team.color,
-                )
-                render_text(
-                    self,
-                    f"Mode : {self.activated_object.mode}",
-                    [20, 130 - hud_transpose],
-                    30,
-                    color=self.activated_object.team.color,
-                )
-            elif self.activated_object.type == "building":
-                render_text(
-                    self,
-                    "Connected to network"
-                    if self.activated_object.connected_to_base
-                    or self.activated_object.name == "Base"
-                    else "NOT CONNECTED TO NETWORK",
-                    [20, 100 - hud_transpose],
-                    30,
-                    color=self.activated_object.team.color,
-                )
 
-        x, y = self.resolution
-
-        if point_inside(self.mouse_pos, [x - 300, y - 100], [300, 100]):
-
-            render_text(
-                self,
-                f"CONS. : {self.player_team.energy_consumption} GEN. : {self.player_team.energy_generation}",
-                [x - 270, y - 125],
-                21,
-                color=self.player_team.color,
-            )
-
-        self.screen.blit(self.surf, [x - 300, y - 100])
-
-        render_text(
-            self,
-            self.player_team.name,
-            [x - 500, y - 91],
-            21,
-            color=self.player_team.color,
-        )
-
-        if self.player_team.g == 0:
-            return
-        color = [255, 164, 0]
-        if self.player_team.energy_consumption > self.player_team.energy_generation:
-            self.generation_overflow_tick.tick()
-            if round(self.generation_overflow_tick.value/self.generation_overflow_tick.max_value) == 1:
-                color = [255,0,0]
-
-
-        pygame.draw.rect(
-            self.screen,
-            color,
-            [
-                x - 300,
-                y - 50,
-                300
-                * (random.uniform(0, 0.15) + self.player_team.c)
-                / self.player_team.g,
-                50,
-            ],
-        )
-
-        self.screen.blit(self.player_team.nrg, [x - 300, y - 100])
-        self.screen.blit(self.images["nrg_icon"], [x - 290, y - 100])
-
-        if color == [255,0,0]:
-            render_text(
-                self,
-                f"OVERUSAGE!",
-                [x - 150, y - 25,],
-                25,
-                color=[255, 164, 0],
-                centerx = True,
-                centery = True
-            )
-
-
-
-        #
-
-        render_text(
-            self,
-            f"ENERGY CONSUMPTION",
-            [x - 240, y - 91],
-            21,
-            color=self.player_team.color,
-        )
 
     def loop(self):
         self.state.tick()

@@ -201,9 +201,22 @@ class Builder(NPC):
                 0.5,
                 5,
                 self.team.color,
-                self.game_ref.images["barracks"],
+                self.game_ref.images["mining_base"],
                 oneshot=True,
                 key_press="3",
+                scale = True,
+                oneshot_func=self.npc_build,
+                argument=MiningStation(self.game_ref, self.team, [-1, -1]),
+            ),
+            Button(
+                self.game_ref,
+                self,
+                0.5,
+                6.5,
+                self.team.color,
+                self.game_ref.images["barracks"],
+                oneshot=True,
+                key_press="4",
                 scale = True,
                 oneshot_func=self.npc_build,
                 argument=Barracks(self.game_ref, self.team, [-1, -1]),
@@ -289,7 +302,7 @@ class Barracks(Building):
         self.range = 0
         self.buildtime = 1
         self.energy_generation = 0
-        self.energy_consumption = 4
+        self.energy_consumption = 3
 
 
 
@@ -338,12 +351,51 @@ class EnergyWell(Building):
         self.range = 0
         self.buildtime = 3
 
-        self.energy_generation = 2
+        self.energy_generation = 3
         self.energy_consumption = 0
 
         self.desc = "Harvests energy from deposits."
 
         super().__init__(game, team, name, slot, size=size, hp=hp, image=image)
 
+        self.requirement = self.game_ref.deposits
+
     def copy(self):
         return EnergyWell(self.game_ref, self.team, self.slot)
+
+
+class MiningStation(Building):
+    def __init__(self, game, team, slot):
+        hp = 200
+        name = "Mining Station"
+        image = game.images["mining_base"].copy()
+        self.select_sound = game.sounds["select_tower"]
+        size = [1, 1]
+        self.range = 0
+        self.buildtime = 3
+
+        self.energy_generation = 0
+        self.energy_consumption = 2
+
+        self.desc = "Explores ore deposits and provides access to them."
+
+        super().__init__(game, team, name, slot, size=size, hp=hp, image=image)
+
+        self.requirement = self.game_ref.mine_positions
+
+        self.top_layer = colorize_alpha(
+            self.game_ref.images["mining_top"].copy(),
+            pygame.Color(
+                self.team.color[0], self.team.color[1], self.team.color[2]
+            ),
+            50,
+            )
+        self.move_between = [[0,0], [0,50]]
+        self.animate_tick = self.game_ref.GT(120)
+        self.resource = ""
+
+
+    
+
+    def copy(self):
+        return MiningStation(self.game_ref, self.team, self.slot)

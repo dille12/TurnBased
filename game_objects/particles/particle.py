@@ -10,8 +10,9 @@ class Particle:
         self.team = nature
         self.type = "particle"
         self.slot_size = [-1,-1]
+        self.id = -1
 
-    def tick(self):
+    def render(self):
         self.pos += self.velocity
         self.height += self.height_velocity
         self.height_velocity += 0.5
@@ -19,7 +20,7 @@ class Particle:
             self.height_velocity *= -0.75
             self.height -= 1
 
-        pygame.draw.rect(self.game_ref.screen, self.color, [self.pos[0] - self.game_ref.camera_pos[0], self.pos[1]- self.game_ref.camera_pos[1] + self.height, 3,3])
+        pygame.draw.rect(self.game_ref.screen, self.color, [self.pos[0] - self.game_ref.camera_pos[0], self.pos[1]- self.game_ref.camera_pos[1] + self.height, self.size,self.size])
         self.lifetime -= 1
         if self.lifetime < 1:
             self.kill()

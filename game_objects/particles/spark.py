@@ -8,3 +8,8 @@ class Spark(Particle):
         self.velocity = np.array(velocity)
         self.color = [255, 153, 0]
         self.lifetime = 20
+        self.size = 3
+        
+
+    def tick(self):
+        self.render()

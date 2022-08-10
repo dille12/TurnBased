@@ -19,15 +19,20 @@ class Cable(Game_Object):
         self.freeze_tick = game_tick(150, oneshot = True)
         self.dont_freeze = dont_freeze
         self.frozen = False
+        self.connected = True
 
-    def tick(self):
-        self.camera_pos = self.game_ref.delta
+    def __str__(self):
+        return f"Cable {self.start_obj} {self.end_obj}"
+
+    def tick(self, color_override = False, ignore_camera = False):
+
+        self.camera_pos = self.game_ref.delta if not ignore_camera else [0,0]
         self.Simulate()
         self.game_tick.tick()
         for x in self.sticks:
             x.render(
                 self.game_ref.screen,
-                color=mult(self.team, self.game_tick.value / self.game_tick.max_value),
+                color=mult(self.team if not color_override else color_override, self.game_tick.value / self.game_tick.max_value) if self.connected else [0,0,0],
             )
 
     def update(self):
@@ -35,17 +40,21 @@ class Cable(Game_Object):
             self.end_obj.connected_to_base = True
             print(self.end_obj)
             self.game_ref.connected_in_scan += 1
+            self.connected = True
         elif self.end_obj.connected_to_base and not self.start_obj.connected_to_base:
             self.start_obj.connected_to_base = True
             print(self.start_obj)
             self.game_ref.connected_in_scan += 1
+            self.connected = True
 
     def disconnect(self):
+        self.connected = False
         self.start_obj.connected_to_base = False
         self.end_obj.connected_to_base = False
 
     def connect(self, boolean=True):
         if not self.start_obj.connected_to_base or not self.end_obj.connected_to_base:
+            self.connected = True
             self.start_obj.connected_to_base = boolean
             print(self.start_obj)
             self.end_obj.connected_to_base = boolean

@@ -26,6 +26,7 @@ def key_press_manager(obj):
         [pygame.K_RETURN, "enter"],
         [pygame.K_BACKSPACE, "backspace"],
         [pygame.K_ESCAPE, "esc"],
+        [pygame.K_DELETE, "del"]
     ]:
         if keys[key]:
             if sign in obj.keypress:

@@ -119,3 +119,5 @@ class NPC(Game_Object):
         else:
 
             self.tick_buttons()
+
+        self.delete()

@@ -39,6 +39,7 @@ def render_text_glitch(
 ):
     #color = pick_random_from_list([[255,0,0], [0,255,0], [0,0,255]])
     text = game.terminal[font_size].render(str(string), False, color)
+    text2 = game.terminal[font_size].render(str(string), False, minus([255,255,255], color, op = "-"))
     upper_pos = 0
     lower_pos = random.randint(2,5)
     text_size = text.get_size()
@@ -46,7 +47,7 @@ def render_text_glitch(
         pos[0] -= text_size[0]/2
     while 1:
         if random.randint(1,5) == 1:
-            game.screen.blit(text, [pos[0] + random.randint(-glitch,glitch), pos[1] + upper_pos], area = [0,upper_pos, text_size[0], lower_pos])
+            game.screen.blit(text if random.uniform(0,1) > 0.1 else text2, [pos[0] + random.randint(-glitch,glitch), pos[1] + upper_pos], area = [0,upper_pos, text_size[0], lower_pos])
         if lower_pos == text_size[1]:
             break
         upper_pos = lower_pos

@@ -34,6 +34,7 @@ class Game_Object:
         self.shots_per_round = 1
         self.shots = 1
         self.act_gt = self.game_ref.GT(20, oneshot=True)
+        self.requirement = None
 
     def __str__(self):
         return f"{self.classname} {self.team.name} {self.slot} {self.id}"
@@ -203,11 +204,32 @@ class Game_Object:
         type.slot = slot
         self.game_ref.gen_object(type)
 
+    def delete(self):
+        if "del" in self.game_ref.keypress and self.active:
+            self.kill()
+            self.game_ref.activated_object = None
+            self.game_ref.scan_connecting_cables()
+
     def kill(self):
+
+        if self.type == "building":
+            for x in self.game_ref.return_objects():
+                if x.type != "cable":
+                    continue
+                print(x)
+                if x.start_obj == self or x.end_obj == self:
+                    self.game_ref.render_layers["5.CABLE"].remove(x)
+                    print("Killing", x)
+
+        self.game_ref.scan_connecting_cables()
+
+
         for x in self.game_ref.render_layers.keys():
             for obj in self.game_ref.render_layers[x]:
                 if obj == self:
                     self.game_ref.render_layers[x].remove(self)
+
+
 
     def slot_to_pos_center(self):
         return [
@@ -224,9 +246,14 @@ class Game_Object:
         )
 
     def check_los(self):
+        if not self.game_ref.draw_los:
+            return True
         x, y = self.slot_to_pos_center()
         pxarray = pygame.PixelArray(self.game_ref.los_image)
-        if pxarray[int(x), int(y)] == 0:
+        try:
+            if pxarray[int(x), int(y)] == 0:
+                return False
+        except:
             return False
         return True
 
@@ -505,6 +532,10 @@ class Game_Object:
                 x.tick()
 
     def los(self):
+
+        if not self.game_ref.draw_los:
+            return
+
         if self.team == self.game_ref.player_team:
 
             if self.type == "building":

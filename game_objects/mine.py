@@ -13,5 +13,7 @@ class Mine(Game_Object):
         )
         self.type = "mine"
 
+        self.resource = ""
+
     def tick(self):
         self.render()

@@ -10,6 +10,7 @@ from game_objects.wall import *
 from game_objects.deposit import *
 from game_objects.objects import *
 from game_objects.cable import *
+from core.map_gen import *
 
 
 class DataGatherer:
@@ -56,7 +57,7 @@ class DataGatherer:
 
         reply = self.game_ref.network.send(packet)
 
-        if reply != "ok" and reply != "/" and reply != "ok/":
+        if reply.strip() not in ["ok", "/", "/ok", "/ok/", "ok/"]:
             print("Received packet:\n", reply)
             self.parse(reply)
 

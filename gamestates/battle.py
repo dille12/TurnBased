@@ -8,6 +8,9 @@ from game_objects.game_object import Game_Object
 from game_objects.npc import NPC
 from game_objects.building import Building
 from game_objects.objects import *
+from hud_elements.battle_hud import draw_HUD
+
+from core.map_gen import *
 
 
 class Battle:
@@ -28,6 +31,9 @@ class Battle:
 
                 #self.render_layers["3.BUILDINGS"].append(Building(self,team,"Base",slot, image = self.images["base"].copy(), size = [2,2]))
                 spawns.remove(slot)
+            random_gen_mines(self.game_ref)
+            gen_mines(self.game_ref)
+            self.game_ref.datagatherer.data.append(f"self.game_ref.set_mines({self.game_ref.mines})")
 
         for x in self.game_ref.connected_players:
             x.nrg = colorize(self.game_ref.images["nrg"], pygame.Color(x.color))
@@ -50,7 +56,7 @@ class Battle:
         # self.game_ref.camera_pos = minus(self.game_ref.mouse_pos,[0.3,0.3], op = "*")
         self.game_ref.screen.fill(BLACK)
         self.game_ref.renderobjects()
-        self.game_ref.draw_HUD()
+        draw_HUD(self.game_ref)
         self.game_ref.own_turn = False
         if self.game_ref.turn == self.game_ref.player_team:
             self.game_ref.own_turn = True

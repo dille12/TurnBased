@@ -2,7 +2,7 @@ import pygame
 from main import Game
 import time
 import socket
-game = Game([1920, 1080])
+game = Game([1920, 1080], draw_los = False)
 
 # game = Game([640,360])
 # game = Game([1280 , 720])
