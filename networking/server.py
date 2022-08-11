@@ -5,142 +5,143 @@ import traceback
 from values import *
 import time
 
-teams = [blue_t, red_t, green_t, yellow_t]
-players = {}
 
-running = True
+
+
+
 
 stop_threads = False
 map_index = 0
-game_stage = "lobby"
 
 
-def threaded_client(conn):
-    global players, running, stop_threads, game_stage, map_index
+class Server:
+    def __init__(self, game):
+        self.game_ref = game
+        self.players = {}
+        self.teams = [blue_t, red_t, green_t, yellow_t]
+        self.running = True
+        self.server_run()
 
-    conn.send(str.encode("ok"))
-    print(conn, "accepted")
 
-    while running:
-        try:
-            data = conn.recv(2048)
-            reply = data.decode("utf-8")
-            if stop_threads:
-                break
+    def threaded_client(self, conn):
+        conn.send(str.encode("ok"))
+        print(conn, "accepted")
 
-            if players[conn]["username"] == "":
-                players[conn]["username"] = reply
-                players[conn]["team"] = teams[len(players)-1]
-                players[conn]["team"].name = players[conn]["username"]
-                print(f"Assigned player {reply} to {teams[len(players)-1].color}")
+        while self.running:
+            try:
+                data = conn.recv(2048)
+                reply = data.decode("utf-8")
+                if stop_threads:
+                    break
 
-            elif reply[:6] == "PACKET":
-                time.sleep(0.1)
-                for individual_packet in reply.split("END#"):
-                    for line in individual_packet.split("\n"):
-                        if line == "PACKET" or line == "/" or line == "":
-                            continue
-                        for x in players:
-                            if x == conn:
+                if self.players[conn]["username"] == "":
+                    self.players[conn]["username"] = reply
+                    self.players[conn]["team"] = self.teams[len(self.players)-1]
+                    self.players[conn]["team"].name = self.players[conn]["username"]
+                    self.game_ref.chat.append(f"Assigned player {reply} to {self.teams[len(self.players)-1].color}")
+
+                elif reply[:6] == "PACKET":
+                    time.sleep(0.1)
+                    for individual_packet in reply.split("END#"):
+                        for line in individual_packet.split("\n"):
+                            if line == "PACKET" or line == "/" or line == "":
                                 continue
-                            players[x]["data"].append(line)
-                            print("Saved line for", players[x]["team"].name)
-                            print(">>> ", line)
+                            for x in self.players:
+                                if x == conn:
+                                    continue
+                                self.players[x]["data"].append(line)
+                                print("Saved line for", self.players[x]["team"].name)
+                                print(">>> ", line)
 
-                if players[conn]["data"] != []:
+                    if self.players[conn]["data"] != []:
 
-                    data = "PACKET\n"
-                    for line_2 in players[conn]["data"]:
-                        data += line_2 + "\n"
-                        players[conn]["data"].remove(line_2)
-                        print("FOUND LINE:", players[conn]["username"], line_2)
-                    data += "END#"
-                    print(f"{data}")
-                else:
-                    data = "ok"
-                conn.send(str.encode(data))
+                        data = "PACKET\n"
+                        for line_2 in self.players[conn]["data"]:
+                            data += line_2 + "\n"
+                            self.players[conn]["data"].remove(line_2)
+                            print("FOUND LINE:", self.players[conn]["username"], line_2)
+                        data += "END#"
+                        print(f"{data}")
+                    else:
+                        data = "ok"
+                    conn.send(str.encode(data))
 
-            elif "STARTGAME" in reply.split("/"):
-                print("STARTING GAME!")
-                for x in players:
-                    print("Sending", players[x]["username"], "to game ")
-                    players[x]["ingame"] = True
-                conn.send(str.encode("ok"))
+                elif "STARTGAME" in reply.split("/"):
+                    print("STARTING GAME!")
+                    for x in self.players:
+                        print("Sending", self.players[x]["username"], "to game ")
+                        self.players[x]["ingame"] = True
+                    conn.send(str.encode("ok"))
 
-            elif reply == players[conn]["username"]:
-                if players[conn]["ingame"]:
-                    print("SENDING START GAME TO", players[conn]["username"])
-                    conn.send(str.encode("/STARTGAME/"))
-                else:
-                    rep = ""
-                    for x in players:
-                        rep += players[x]["username"] + "-" + str(players[x]["team"].color) + "-" + str(players[x]["team"].str_team) + "/"
-                    conn.send(str.encode(rep))
+                elif reply == self.players[conn]["username"]:
+                    if self.players[conn]["ingame"]:
+                        print("SENDING START GAME TO", self.players[conn]["username"])
+                        conn.send(str.encode("/STARTGAME/"))
+                    else:
+                        rep = ""
+                        for x in self.players:
+                            rep += self.players[x]["username"] + "-" + str(self.players[x]["team"].color) + "-" + str(self.players[x]["team"].str_team) + "/"
+                        conn.send(str.encode(rep))
 
 
 
-            elif reply == "kill":
+                elif reply == "kill":
+                    conn.sendall(str.encode("/"))
+                    self.running = False
+
+                    for x in self.players:
+                        x.close()
+                        print(x, "closed")
+
+                    break
                 conn.sendall(str.encode("/"))
-                running = False
-
-                for x in players:
-                    x.close()
-                    print(x, "closed")
-
+            except Exception as e:
+                self.game_ref.chat.append(f"SERVER ERROR: {e}")
+                self.game_ref.chat.append(traceback.print_exc())
                 break
-            conn.sendall(str.encode("/"))
-        except Exception as e:
-            print("SERVER ERROR", e)
-            print(traceback.print_exc())
-            break
-    print("Connection Closed")
-    del players[conn]
-    conn.close()
+        print("Connection Closed")
+        del self.players[conn]
+        conn.close()
 
 
-def return_players():
-    return players
+    def server_run(self):
 
 
-def server_run():
+        print("Starting host")
+        print(socket.gethostbyname(socket.gethostname()))
 
-    global players, running, stop_threads
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    print("Starting host")
-    print(socket.gethostbyname(socket.gethostname()))
+        hostname = socket.gethostname()
+        ip_address = socket.gethostbyname(hostname)
+        print(ip_address)
+        port = 5555
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print("INITTING")
+        try:
+            print("Trying")
+            s.bind((ip_address, port))
 
-    hostname = socket.gethostname()
-    ip_address = socket.gethostbyname(hostname)
-    print(ip_address)
-    port = 5555
+        except socket.error as e:
+            print(str(e))
 
-    print("INITTING")
-    try:
-        print("Trying")
-        s.bind((ip_address, port))
+        s.listen(2)
+        print("Waiting for a connection")
 
-    except socket.error as e:
-        print(str(e))
+        currentId = "0"
 
-    s.listen(2)
-    print("Waiting for a connection")
+        while self.running:
+            print("Server ticking...")
+            conn, addr = s.accept()
+            print("SERVER: Connected to: ", addr)
+            self.players[conn] = {
+                "username": "",
+                "team" : placeholder,
+                "ingame" : False,
+                "data" : []
+            }
+            print("SERVER: CREATING A THREAD TO", addr)
 
-    currentId = "0"
-
-    while running:
-        print("Server ticking...")
-        conn, addr = s.accept()
-        print("SERVER: Connected to: ", addr)
-        players[conn] = {
-            "username": "",
-            "team" : placeholder,
-            "ingame" : False,
-            "data" : []
-        }
-        print("SERVER: CREATING A THREAD TO", addr)
-
-        start_new_thread(threaded_client, (conn,))
-    stop_threads = True
-    print("Server killed")
+            start_new_thread(self.threaded_client, (conn,))
+        stop_threads = True
+        print("Server killed")

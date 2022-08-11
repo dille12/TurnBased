@@ -155,7 +155,10 @@ class Game_Object:
         else:
             x = self.slot[0]*100 + random.randint(0,1) * self.slot_size[0]*100
             y = random.uniform(self.slot[1]*100, (self.slot[1] + self.slot_size[1])*100)
-        self.game_ref.render_layers["PARTICLES"].append(Spark(self.game_ref, [x,y],[random.uniform(-3,3), random.uniform(-3,3)]))
+        self.gen_spark([x,y])
+
+    def gen_spark(self, point):
+        self.game_ref.render_layers["PARTICLES"].append(Spark(self.game_ref, point,[random.uniform(-3,3), random.uniform(-3,3)]))
 
 
 

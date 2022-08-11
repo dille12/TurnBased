@@ -80,7 +80,7 @@ class Menu:
 
     def lobby_host(self, thread, ip):
         print("SERVER STARTING")
-        networking.server.server_run()
+        self.game_ref.server = networking.server.Server(self.game_ref)
 
     def get_names(self):
         list = []

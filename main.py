@@ -18,6 +18,7 @@ import numpy as np
 from game_objects.objects import *
 from core.player import Player
 from hud_elements.button import *
+from hud_elements.chat import Chat
 import gamestates.battle
 import gamestates.menu
 import socket
@@ -35,7 +36,7 @@ class Game:
         pygame.font.init()
         self.draw_los = draw_los
         self.GT = GameTick
-
+        self.chat = Chat(self)
         self.datagatherer = DataGatherer(self)
 
         self.resolution = resolution
@@ -383,4 +384,5 @@ class Game:
 
     def loop(self):
         self.state.tick()
+        self.chat.tick()
         pygame.display.update()

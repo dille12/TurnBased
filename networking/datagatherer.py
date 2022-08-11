@@ -11,6 +11,7 @@ from game_objects.deposit import *
 from game_objects.objects import *
 from game_objects.cable import *
 from core.map_gen import *
+import sys
 
 
 class DataGatherer:
@@ -32,13 +33,11 @@ class DataGatherer:
                 if line == "PACKET" or line == "/":
                     continue
                 try:
-                    print("Evaluating line", line)
+                    self.game_ref.chat.append(f"Evaluating line: {line}")
                     eval(line)
-                    print("SUCCESS")
+                    self.game_ref.chat.append("SUCCESS")
                 except Exception as e:
-                    print(line)
-                    print("Exception:",e)
-                    print(traceback.print_exc())
+                    self.game_ref.chat.append(f"Evaluation exception: {e}")
 
 
 
@@ -57,7 +56,10 @@ class DataGatherer:
 
         reply = self.game_ref.network.send(packet)
 
-        if reply.strip() not in ["ok", "/", "/ok", "/ok/", "ok/"]:
+        if reply.strip("/ ") == "KILL":
+            sys.exit()
+
+        if reply.strip(" ") not in ["ok", "/", "/ok", "/ok/", "ok/", ""]:
             print("Received packet:\n", reply)
             self.parse(reply)
 

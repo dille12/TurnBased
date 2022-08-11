@@ -369,7 +369,7 @@ class MiningStation(Building):
         hp = 200
         name = "Mining Station"
         image = game.images["mining_base"].copy()
-        self.select_sound = game.sounds["select_tower"]
+        self.select_sound = game.sounds["select_mine"]
         size = [1, 1]
         self.range = 0
         self.buildtime = 3
@@ -395,7 +395,7 @@ class MiningStation(Building):
         self.resource = ""
 
 
-    
+
 
     def copy(self):
         return MiningStation(self.game_ref, self.team, self.slot)

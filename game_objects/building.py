@@ -17,6 +17,10 @@ class Building(Game_Object):
         self.static_cables = []
         self.top_layer = None
 
+        self.connected_cables = []
+
+        self.cable_send_tick = self.game_ref.GT(30)
+
         self.c_building = False
 
         if self.image != None:
@@ -241,6 +245,13 @@ class Building(Game_Object):
             self.game_ref.screen.blit(self.top_layer, [x1 + posx, y1 + posy])
 
 
+    def cable_send(self):
+        if self.name == "Base":
+            if self.cable_send_tick.tick():
+                for x in self.connected_cables:
+                    x.i = 30
+
+
     def tick(self):
         self.los()
         if hasattr(self, "resource"):
@@ -254,6 +265,7 @@ class Building(Game_Object):
                 self.activate(False)
 
         self.render()
+        self.cable_send()
         self.tick_buttons()
         self.tick_queue()
         self.tick_cable()
