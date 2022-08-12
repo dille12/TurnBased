@@ -80,7 +80,7 @@ class Menu:
         self.game_ref.hosting_game = False
 
         pygame.mixer.music.load("sounds/music/game_loop.mp3")
-        pygame.mixer.music.set_volume(0.25)
+        pygame.mixer.music.set_volume(self.game_ref.music_volume)
         pygame.mixer.music.play(-1)
 
     def lobby_host(self, thread, ip):

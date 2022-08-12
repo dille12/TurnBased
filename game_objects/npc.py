@@ -14,8 +14,11 @@ class NPC(Game_Object):
         self.routes = []
         self.moving_route = []
         self.move_tick = game.GT(20)
+        self.render_long_routes = False
+        self.stashed_route = []
         self.target = None
         self.image = image
+        self.target_pos = [0,0]
         self.build = None
         if self.image != None:
             self.image = colorize_alpha(
@@ -43,30 +46,40 @@ class NPC(Game_Object):
         if self.target == None:
             self.target = self.slot.copy()
 
-        if self.move_tick.tick():
-            self.slot = self.target.copy()
-            self.moving_route.remove(self.moving_route[0])
-            if self.moving_route == []:
-                return
-            self.target = self.moving_route[0]
+        if self.turn_movement > 0 and self.moving_route != []:
+            if self.move_tick.tick():
+                self.slot = self.target.copy()
+                self.moving_route.remove(self.moving_route[0])
+                if self.moving_route == []:
+                    return
+                self.target = self.moving_route[0]
 
-            list_play(
-                [
-                    self.game_ref.sounds["walk1"],
-                    self.game_ref.sounds["walk2"],
-                    self.game_ref.sounds["walk3"],
-                ]
-            )
+                list_play(
+                    [
+                        self.game_ref.sounds["walk1"],
+                        self.game_ref.sounds["walk2"],
+                        self.game_ref.sounds["walk3"],
+                    ]
+                )
 
-            self.turn_movement -= 1
-            self.los()
+                self.turn_movement -= 1
+                self.los()
 
-            print(self.moving_route)
-        else:
-            self.slot = minus(
-                self.slot,
-                minus(minus(self.target, self.slot, op="-"), [0.6, 0.6], op="*"),
-            )
+                print(self.moving_route)
+
+        elif self.moving_route != []:
+            self.stashed_route = self.moving_route.copy()
+            self.moving_route = []
+
+        self.slot = minus(
+            self.slot,
+            minus(minus(self.target, self.slot, op="-"), [0.6, 0.6], op="*"),
+        )
+
+        if self.stashed_route != []:
+            self.render_lines_route(route = self.stashed_route)
+
+
 
     def update_routes(self):
         self.routes = self.scan_movement(self.turn_movement)
@@ -83,11 +96,20 @@ class NPC(Game_Object):
 
             if self.mode == "walk":
 
-                if self.active and "mouse0" in self.game_ref.keypress:
-                    self.update_routes()
+                if self.active and "mouse2" in self.game_ref.keypress and self.game_ref.own_turn:
+                    self.render_long_routes = True
 
-                if self.active:
-                    self.render_routes()
+                if self.render_long_routes:
+                    if "mouse2" not in self.game_ref.keypress_held_down:
+                        if self.route_to_pos != []:
+                            self.moving_route = self.route_to_pos.copy()
+                            self.route_to_pos = []
+                            self.activate(False)
+                        else:
+                            self.render_long_routes = False
+
+
+                    self.render_long_range()
 
             elif self.mode == "attack" and self.active and self.shots > 0:
                 x, y = self.slot_to_pos_c(minus(self.slot, [-self.range, -self.range]))
@@ -102,8 +124,8 @@ class NPC(Game_Object):
         if "esc" in self.game_ref.keypress:
             self.activate(False)
 
-        if self.moving_route != []:
-            self.move()
+
+        self.move()
 
         self.render()
 

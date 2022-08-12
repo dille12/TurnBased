@@ -18,6 +18,13 @@ def draw_HUD(game):
             glitch=4 + game.vibration,
         )
         if game.activated_object.type == "npc":
+            render_text(
+                game,
+                f"{game.activated_object.finding_route}",
+                [70, 400],
+                21,
+                color=game.player_team.color,
+            )
             render_text_glitch(
                 game,
                 f"Movement : {game.activated_object.turn_movement}/{game.activated_object.movement_range}",

@@ -16,7 +16,7 @@ class ExplosionParticle(Particle):
     def tick(self):
         self.color[1:2] = core.func.mult(self.color, 0.9)[1:2]
 
-        self.size = self.lifetime
+        self.size = self.lifetime*1.5
 
         self.height_manipulation(bounce=False)
 

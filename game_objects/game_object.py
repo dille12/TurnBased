@@ -8,6 +8,8 @@ import numpy as np
 from game_objects.particles.spark import Spark
 from game_objects.particles.ash import Ash
 from game_objects.particles.explosion_particles import ExplosionParticle
+import core.path_finding
+from _thread import *
 
 
 class Game_Object:
@@ -32,6 +34,7 @@ class Game_Object:
         self.c_build_time = 0
         self.connected_to_base = False
         self.los_rad = 250
+        self.finding_route = False
 
         self.shots_per_round = 1
         self.shots = 1
@@ -106,7 +109,7 @@ class Game_Object:
         )
 
     def center_slot(self):
-        return [self.slot[0] + self.slot_size[0], self.slot[1] + self.slot_size[1]]
+        return [self.slot[0] + self.slot_size[0]/2, self.slot[1] + self.slot_size[1]/2]
 
     def hp_change(self, amount):
         self.hp += amount
@@ -217,7 +220,7 @@ class Game_Object:
     def delete(self):
         if "del" in self.game_ref.keypress and self.active:
             self.kill()
-            self.game_ref.activated_object = None
+
             self.game_ref.scan_connecting_cables()
             self.game_ref.datagatherer.data.append(
                 f"self.game_ref.find_object_id({self.id}).kill()"
@@ -230,6 +233,9 @@ class Game_Object:
 
         x, y = self.slot_to_pos_center()
         print(x, y)
+
+        if self.game_ref.activated_object == self:
+            self.game_ref.activated_object = None
 
         for i in range(16):
             self.game_ref.render_layers["PARTICLES"].append(Ash(self.game_ref, [x, y]))
@@ -287,6 +293,19 @@ class Game_Object:
             ]
         )
 
+    def check_slot_los(self, x,y):
+        if not self.game_ref.draw_los:
+            return True
+        pxarray = pygame.PixelArray(self.game_ref.los_image)
+        for x1 in range(2):
+            for y1 in range(2):
+                try:
+                    if pxarray[int(round(x + x1*100)), int(round(y + y1*100))] != 0:
+                        return True
+                except:
+                    pass
+        return False
+
     def check_los(self):
         if not self.game_ref.draw_los:
             return True
@@ -299,8 +318,11 @@ class Game_Object:
             return False
         return True
 
-    def slot_to_pos_c(self, slot):
-        return self.game_ref.get_pos([slot[0] * 100, slot[1] * 100])
+    def slot_to_pos_c(self, slot, center = False, no_cam = False):
+        c = 0
+        if center:
+            c = self.size[0] / 2
+        return self.game_ref.get_pos([slot[0] * 100+c, slot[1] * 100+c]) if not no_cam else [slot[0] * 100+c, slot[1] * 100+c]
 
     def render(self):
         if self.type == "wall":
@@ -473,7 +495,7 @@ class Game_Object:
 
     def activate(self, boolean=True):
         if not boolean:
-
+            self.render_long_routes = False
             self.build = None
             if self.game_ref.activated_object == self:
                 self.game_ref.activated_object = None
@@ -489,6 +511,56 @@ class Game_Object:
                 self.scan_enemies()
             self.game_ref.activated_object = self
         self.active = boolean
+
+    def render_long_range(self):
+        target = self.pos_to_slot(self.game_ref.get_pos_rev(self.game_ref.mouse_pos))
+        x,y = self.slot_to_pos_c(target, center = False, no_cam = True)
+        x1,y1 = self.slot_to_pos_c(target, center = False, no_cam = False)
+
+        if not self.check_slot_los(x,y) or target in self.game_ref.get_occupied_slots():
+            self.route_to_pos = []
+            self.target_pos = [-1,-1]
+            pygame.draw.rect(
+                self.game_ref.screen,
+                [255,0,0],
+                [x1 + 10, y1 + 10, 80, 80],
+                3,
+            )
+            return
+
+        pygame.draw.rect(
+            self.game_ref.screen,
+            core.func.mult(self.team.color, 0.8),
+            [x1 + 10, y1 + 10, 80, 80],
+            5,
+        )
+
+
+
+        if self.target_pos != target:
+
+            if not self.finding_route:
+                start_new_thread(core.path_finding.compute, (self, self.slot, target, self.game_ref.get_occupied_slots(), self.game_ref.size_slots))
+
+        if self.route_to_pos != []:
+            self.render_lines_route()
+
+    def render_lines_route(self, route = False):
+        if not route:
+            route = self.route_to_pos
+        last_x_y = core.func.minus(self.slot.copy(), [0.5, 0.5])
+
+        for i, pos in enumerate(route):
+            pos = core.func.minus(pos.copy(), [0.5, 0.5])
+            pygame.draw.line(
+                self.game_ref.screen,
+                self.team.color if i <= self.turn_movement else [255,0,0],
+                self.slot_to_pos_c(last_x_y),
+                self.slot_to_pos_c(pos),
+                4,
+            )
+            last_x_y = pos.copy()
+
 
     def render_routes(self):
         rendered = [0, 0, 0, 0, 0, 0, 0, 0]
@@ -519,21 +591,10 @@ class Game_Object:
                                 slot, self.routes
                             )
 
-                        last_x_y = core.func.minus(self.slot.copy(), [0.5, 0.5])
-
-                        for pos in self.route_to_pos:
-                            pos = core.func.minus(pos.copy(), [0.5, 0.5])
-                            pygame.draw.line(
-                                self.game_ref.screen,
-                                self.team.color,
-                                self.slot_to_pos_c(last_x_y),
-                                self.slot_to_pos_c(pos),
-                                4,
-                            )
-                            last_x_y = pos.copy()
+                        self.render_lines_route()
 
                         if (
-                            "mouse2" in self.game_ref.keypress
+                            "mouse2" in self.game_ref.keypress_held_down
                             and self.game_ref.own_turn
                         ):
                             self.moving_route = self.route_to_pos

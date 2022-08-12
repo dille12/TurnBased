@@ -101,6 +101,11 @@ class Game:
 
         self.clock = pygame.time.Clock()
 
+        self.sound_volume = 1
+        self.music_volume = 0.4
+
+
+
         self.state = gamestates.loadscreen.Loadscreen(self)
 
     def play_sound(self, name):
@@ -151,9 +156,14 @@ class Game:
         self.scan_connecting_cables()
         if self.draw_los:
             self.los_image.fill([0, 0, 0])
-            for x in self.return_objects():
+        for x in self.return_objects():
+            if self.draw_los:
                 if x.type == "building":
                     x.los()
+            if x.type == "npc" and x.own() and x.turn_movement > 0:
+                x.moving_route = x.stashed_route.copy()
+                x.stashed_route = []
+
 
         for i, x in enumerate(self.connected_players):
             if x == self.player_team:

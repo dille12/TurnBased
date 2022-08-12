@@ -19,6 +19,7 @@ def gen_map(game, image):
             elif game.pxarray[x, y] == image.map_rgb((0, 255, 0)):
                 deposits.append([x, y])
 
+
     game.size_slots = size
     game.tiles = tiles
     game.deposits = deposits

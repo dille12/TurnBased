@@ -26,5 +26,6 @@
 ## Technical
 - Settings to change fps cap and resolution
 - Unit testing
-- Test multiplayer extensively to ensure there is no desync 
+- Test multiplayer extensively to ensure there is no desync
 - Random generated maps by seed
+- AI

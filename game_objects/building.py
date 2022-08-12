@@ -78,13 +78,7 @@ class Building(Game_Object):
             self.cable.startpoint.pos = np.array(self.slot_to_pos_c_cam())
             self.cable.endpoint.pos = np.array(self.game_ref.mouse_pos)
 
-            self.dist = round(
-                core.func.get_dist_points(
-                    self.cable.startpoint.pos, self.cable.endpoint.pos
-                )
-            )
 
-            text = f"{self.dist}/500 u."
 
             for obj in self.game_ref.render_layers["3.BUILDINGS"]:
                 if (
@@ -176,16 +170,27 @@ class Building(Game_Object):
                     existing.tick(color_override=[255, 0, 0], ignore_camera=True)
                 else:
                     self.cable.tick()
+            try:
+                self.dist = round(
+                    core.func.get_dist_points(
+                        self.cable.startpoint.pos, self.cable.endpoint.pos
+                    )
+                )
 
-            core.func.render_text(
-                self.game_ref,
-                text,
-                core.func.minus(self.game_ref.mouse_pos, [20, -20]),
-                20,
-                color=self.team.color
-                if self.dist < 500 and text != "CUT"
-                else [255, 0, 0],
-            )
+                text = f"{self.dist}/500 u."
+
+
+                core.func.render_text(
+                    self.game_ref,
+                    text,
+                    core.func.minus(self.cable.endpoint.pos, [20, -20]),
+                    20,
+                    color=self.team.color
+                    if self.dist < 500 and text != "CUT"
+                    else [255, 0, 0],
+                )
+            except:
+                pass
 
     def render_buildable(self, occ_slots):
         unplaceable = False

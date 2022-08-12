@@ -21,6 +21,7 @@ def load_images(game, size_conversion):
                 temp = pygame.image.load(f"{mypath}/{x}").convert_alpha()
             else:
                 temp = pygame.image.load(f"{mypath}/{x}").convert()
+            game.loading = f"{mypath}/{x}"
             size = temp.get_size()
             print(size)
             image = pygame.transform.scale(

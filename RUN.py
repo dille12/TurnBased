@@ -8,6 +8,9 @@ game = Game([1920, 1080], draw_los=False)
 # game = Game([640,360])
 # game = Game()
 fps_update = time.time()
+
+
+
 while 1:
     t1 = time.time()
     game.clock.tick(60)

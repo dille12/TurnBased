@@ -19,7 +19,7 @@ class Loadscreen:
             [
                 0,
                 self.game_ref.resolution[1] - 30,
-                self.game_ref.resolution[0] * (self.game_ref.load_i / 46),
+                self.game_ref.resolution[0] * (self.game_ref.load_i / 51),
                 30,
             ],
         )
