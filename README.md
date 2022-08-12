@@ -1,5 +1,5 @@
 # TurnBased
-WIP python/pygame Turn based online multiplayer game.
+WIP python/pygame Turn based online multiplayer game. Capped for 4 players.
 
 ![alt text](https://github.com/dille12/TurnBased/blob/main/texture/splash_screen.png "SplashScreen")
 
