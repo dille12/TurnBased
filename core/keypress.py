@@ -1,5 +1,6 @@
 import pygame
 import core.func
+import sys
 
 
 def key_press_manager(obj):
@@ -26,7 +27,8 @@ def key_press_manager(obj):
         [pygame.K_RETURN, "enter"],
         [pygame.K_BACKSPACE, "backspace"],
         [pygame.K_ESCAPE, "esc"],
-        [pygame.K_DELETE, "del"]
+        [pygame.K_DELETE, "del"],
+        [pygame.K_t, "t"],
     ]:
         if keys[key]:
             if sign in obj.keypress:

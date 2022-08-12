@@ -1,12 +1,13 @@
 import pygame
 from core.func import *
 
+
 def draw_HUD(game):
     hud_transpose = 0
     if game.activated_object != None:
         hud_transpose = game.activated_object.smoothing
 
-        game.screen.blit(game.images["hud_sprite_1"], [0,-hud_transpose])
+        game.screen.blit(game.images["hud_sprite_1"], [0, -hud_transpose])
 
         render_text_glitch(
             game,
@@ -14,7 +15,7 @@ def draw_HUD(game):
             [17, 22 - hud_transpose],
             80,
             color=game.activated_object.team.color,
-            glitch = 4
+            glitch=4 + game.vibration,
         )
         if game.activated_object.type == "npc":
             render_text_glitch(
@@ -23,7 +24,7 @@ def draw_HUD(game):
                 [20, 102 - hud_transpose],
                 30,
                 color=game.activated_object.team.color,
-                glitch = 2
+                glitch=2 + game.vibration,
             )
             render_text_glitch(
                 game,
@@ -31,7 +32,7 @@ def draw_HUD(game):
                 [20, 129 - hud_transpose],
                 30,
                 color=game.activated_object.team.color,
-                glitch = 2
+                glitch=2 + game.vibration,
             )
         elif game.activated_object.type == "building":
             render_text_glitch(
@@ -43,7 +44,7 @@ def draw_HUD(game):
                 [20, 102 - hud_transpose],
                 30,
                 color=game.activated_object.team.color,
-                glitch = 2
+                glitch=2 + game.vibration,
             )
             if hasattr(game.activated_object, "resource"):
                 res = game.activated_object.resource
@@ -52,8 +53,14 @@ def draw_HUD(game):
                     res if res != "" else "???",
                     [20, 129 - hud_transpose],
                     30,
-                    color=[255,0,0] if res == "Iridium" else [0,255,0] if res == "Uranium" else [51, 204, 255] if res == "Tungsten" else [255, 102, 0],
-                    glitch = 2
+                    color=[255, 0, 0]
+                    if res == "Iridium"
+                    else [0, 255, 0]
+                    if res == "Uranium"
+                    else [51, 204, 255]
+                    if res == "Tungsten"
+                    else [255, 102, 0],
+                    glitch=2 + game.vibration,
                 )
 
     x, y = game.resolution
@@ -83,9 +90,14 @@ def draw_HUD(game):
     color = [255, 164, 0]
     if game.player_team.energy_consumption > game.player_team.energy_generation:
         game.generation_overflow_tick.tick()
-        if round(game.generation_overflow_tick.value/game.generation_overflow_tick.max_value) == 1:
-            color = [255,0,0]
-
+        if (
+            round(
+                game.generation_overflow_tick.value
+                / game.generation_overflow_tick.max_value
+            )
+            == 1
+        ):
+            color = [255, 0, 0]
 
     pygame.draw.rect(
         game.screen,
@@ -93,9 +105,7 @@ def draw_HUD(game):
         [
             x - 300,
             y - 50,
-            300
-            * (random.uniform(0, 0.15) + game.player_team.c)
-            / game.player_team.g,
+            300 * (random.uniform(0, 0.15) + game.player_team.c) / game.player_team.g,
             50,
         ],
     )
@@ -103,18 +113,19 @@ def draw_HUD(game):
     game.screen.blit(game.player_team.nrg, [x - 300, y - 100])
     game.screen.blit(game.images["nrg_icon"], [x - 290, y - 100])
 
-    if color == [255,0,0]:
+    if color == [255, 0, 0]:
         render_text(
             game,
             f"OVERUSAGE!",
-            [x - 150, y - 25,],
+            [
+                x - 150,
+                y - 25,
+            ],
             25,
             color=[255, 164, 0],
-            centerx = True,
-            centery = True
+            centerx=True,
+            centery=True,
         )
-
-
 
     #
 

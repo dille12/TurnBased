@@ -17,9 +17,20 @@ class Battle:
     def __init__(self, game):
         self.game_ref = game
 
+        self.game_ref.next_turn_button = Button(
+            self.game_ref,
+            self.game_ref,
+            17,
+            8.5,
+            self.game_ref.player_team.color,
+            self.game_ref.images["nextturn"],
+            oneshot=True,
+            oneshot_func=self.game_ref.end_turn,
+        )
+
         self.game_ref.turn = self.game_ref.connected_players[0]
 
-        spawns = [[1,1],[22,22],[2,17],[20,6]]
+        spawns = [[1, 1], [22, 22], [2, 17], [20, 6]]
 
         if self.game_ref.hosting_game:
             for team in self.game_ref.connected_players:
@@ -29,11 +40,13 @@ class Battle:
 
                 self.game_ref.gen_object(Base(self.game_ref, team, slot))
 
-                #self.render_layers["3.BUILDINGS"].append(Building(self,team,"Base",slot, image = self.images["base"].copy(), size = [2,2]))
+                # self.render_layers["3.BUILDINGS"].append(Building(self,team,"Base",slot, image = self.images["base"].copy(), size = [2,2]))
                 spawns.remove(slot)
             random_gen_mines(self.game_ref)
             gen_mines(self.game_ref)
-            self.game_ref.datagatherer.data.append(f"self.game_ref.set_mines({self.game_ref.mines})")
+            self.game_ref.datagatherer.data.append(
+                f"self.game_ref.set_mines({self.game_ref.mines})"
+            )
 
         for x in self.game_ref.connected_players:
             x.nrg = colorize(self.game_ref.images["nrg"], pygame.Color(x.color))
@@ -46,7 +59,8 @@ class Battle:
         self.game_ref.datagatherer.tick()
 
         key_press_manager(self.game_ref)
-        cam_movement(self.game_ref)
+        if not self.game_ref.chat.chatbox.active:
+            cam_movement(self.game_ref)
 
         self.game_ref.delta = np.array(self.game_ref.prev_pos) - np.array(
             self.game_ref.camera_pos

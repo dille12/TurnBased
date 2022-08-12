@@ -6,6 +6,11 @@ from os.path import isfile, join
 
 def load_images(game, size_conversion):
 
+    for x in range(1, 151):
+        game.terminal[x] = pygame.font.Font(
+            "texture/terminal.ttf", round(x / size_conversion[0])
+        )
+
     for path in ["sprites", "non_alpha"]:
 
         mypath = os.path.abspath(os.getcwd()) + f"/texture/{path}/"
@@ -22,11 +27,9 @@ def load_images(game, size_conversion):
                 temp, [size[0] / size_conversion[0], size[1] / size_conversion[1]]
             )
             game.images[x.removesuffix(".png")] = image
+            game.load_i += 1
 
-    for x in range(1, 151):
-        game.terminal[x] = pygame.font.Font(
-            "texture/terminal.ttf", round(x / size_conversion[0])
-        )
+
 
 
 # if __name__ == "__main__":

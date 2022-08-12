@@ -16,16 +16,22 @@ import time
 import random
 import ast
 import gamestates.battle
+import math
 
 
 class Menu:
     def __init__(self, game):
         self.game_ref = game
-        self.name_box = TextBox(self.game_ref, [250, 20], f"Runkkari{random.randint(0,100)}")
-        self.ip_box = TextBox(self.game_ref, [250, 70], self.game_ref.own_ip, secret=False)
+        self.name_box = TextBox(
+            self.game_ref, [250, 20], f"Runkkari{random.randint(0,100)}"
+        )
+        self.ip_box = TextBox(
+            self.game_ref, [250, 70], self.game_ref.own_ip, secret=False
+        )
         self.threading = False
         self.glitch_amount = 2
         self.menu_text = "MAIN MENU"
+        self.button_click_tick = self.game_ref.GT(30, oneshot=True)
         self.host = Button(
             self.game_ref,
             None,
@@ -73,7 +79,6 @@ class Menu:
         self.game_ref.network = None
         self.game_ref.hosting_game = False
 
-
         pygame.mixer.music.load("sounds/music/game_loop.mp3")
         pygame.mixer.music.set_volume(0.25)
         pygame.mixer.music.play(-1)
@@ -97,7 +102,6 @@ class Menu:
             self.start_game(None)
             return
 
-
         for x in reply.split("/"):
             y = x.split("-")
             if y[0] == "" or y[0] in self.get_names() or len(y) == 1:
@@ -105,24 +109,14 @@ class Menu:
 
             print("Player connected:", y[0])
 
-            team = Player(
-                ast.literal_eval(y[1]),
-                y[0],
-                y[2]
-                )
-
-
+            team = Player(ast.literal_eval(y[1]), y[0], y[2])
 
             self.game_ref.connected_players.append(team)
             if y[0] == self.name_box.text and self.game_ref.player_team == placeholder:
                 print("Assigning to player team")
                 self.game_ref.player_team = team
 
-
         self.threading = False
-
-
-
 
     def host_game(self, ip):
         print("HOSTING GAME")
@@ -133,7 +127,6 @@ class Menu:
             self.join_game(ip)
         except Exception as e:
             self.game_ref.error_message = e
-
 
     def join_game(self, ip):
         print("JOINING TO:", ip)
@@ -150,28 +143,32 @@ class Menu:
         except Exception as e:
             self.game_ref.error_message = e
 
-
     def kill_network(self, null):
         self.game_ref.network.send("kill")
         self.game_ref.network = None
-
-
 
     def start_game(self, null):
 
         self.game_ref.network.send("/STARTGAME/")
 
-        print("PLAYER TEAM:",self.game_ref.player_team.color, self.game_ref.player_team.name)
+        print(
+            "PLAYER TEAM:",
+            self.game_ref.player_team.color,
+            self.game_ref.player_team.name,
+        )
         self.game_ref.state = gamestates.battle.Battle(self.game_ref)
-
 
     def render_text_boxes(self):
         render_text(self.game_ref, "YOUR NAME:", [20, 20], 30)
         self.name_box.tick()
         render_text(self.game_ref, "JOIN IP:", [20, 70], 30)
         self.ip_box.tick()
-        render_text(self.game_ref, f"OWN IP: {self.game_ref.own_ip}", [20, 120], 30)
-
+        render_text(
+            self.game_ref,
+            f"OWN IP: {self.game_ref.own_ip}",
+            [20 - self.smoothing, 120],
+            30,
+        )
 
     def lobby_tick(self):
         render_text(self.game_ref, "LOBBY", [20, 20], 30)
@@ -182,14 +179,26 @@ class Menu:
             start_new_thread(self.threaded_player_info_gathering, ())
         i = 0
         for x in self.game_ref.connected_players:
-            render_text(self.game_ref, x.name, [20, 130+i], 30, color = x.color)
-            i+=30
-
+            render_text(self.game_ref, x.name, [20, 130 + i], 30, color=x.color)
+            i += 30
 
         self.exit.tick()
 
+    def tick_recovery(self):
+        if not self.button_click_tick.tick():
+            self.smoothing = (
+                1
+                + math.cos(
+                    math.pi
+                    * self.button_click_tick.value
+                    / self.button_click_tick.max_value
+                )
+            ) * 100
+        else:
+            self.smoothing = 0
 
     def tick(self):
+        self.tick_recovery()
         key_press_manager(self.game_ref)
         self.game_ref.screen.fill(BLACK)
         if self.game_ref.network:
@@ -200,14 +209,28 @@ class Menu:
             self.join.tick()
 
         if self.game_ref.error_message != None:
-            render_text(self.game_ref, self.game_ref.error_message, [20, 600], 30, color = [255,0,0])
+            render_text(
+                self.game_ref,
+                self.game_ref.error_message,
+                [20, 600],
+                30,
+                color=[255, 0, 0],
+            )
             if time.time() - self.error_time > 5:
                 self.game_ref.error_message = None
         else:
             self.error_time = time.time()
         if "mouse0" in self.game_ref.keypress:
             self.glitch_amount = 30
+            self.button_click_tick.value = 0
 
-        render_text_glitch(self.game_ref, self.menu_text, [self.game_ref.resolution[0]/2,20],100, centerx = True, glitch = self.glitch_amount)
+        render_text_glitch(
+            self.game_ref,
+            self.menu_text,
+            [self.game_ref.resolution[0] / 2, 20],
+            100,
+            centerx=True,
+            glitch=self.glitch_amount,
+        )
         if self.glitch_amount >= 4:
             self.glitch_amount -= 1

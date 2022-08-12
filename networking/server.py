@@ -6,10 +6,6 @@ from values import *
 import time
 
 
-
-
-
-
 stop_threads = False
 map_index = 0
 
@@ -21,7 +17,6 @@ class Server:
         self.teams = [blue_t, red_t, green_t, yellow_t]
         self.running = True
         self.server_run()
-
 
     def threaded_client(self, conn):
         conn.send(str.encode("ok"))
@@ -36,9 +31,11 @@ class Server:
 
                 if self.players[conn]["username"] == "":
                     self.players[conn]["username"] = reply
-                    self.players[conn]["team"] = self.teams[len(self.players)-1]
+                    self.players[conn]["team"] = self.teams[len(self.players) - 1]
                     self.players[conn]["team"].name = self.players[conn]["username"]
-                    self.game_ref.chat.append(f"Assigned player {reply} to {self.teams[len(self.players)-1].color}")
+                    self.game_ref.chat.append(
+                        f"Assigned player {reply} to {self.teams[len(self.players)-1].color}"
+                    )
 
                 elif reply[:6] == "PACKET":
                     time.sleep(0.1)
@@ -80,10 +77,15 @@ class Server:
                     else:
                         rep = ""
                         for x in self.players:
-                            rep += self.players[x]["username"] + "-" + str(self.players[x]["team"].color) + "-" + str(self.players[x]["team"].str_team) + "/"
+                            rep += (
+                                self.players[x]["username"]
+                                + "-"
+                                + str(self.players[x]["team"].color)
+                                + "-"
+                                + str(self.players[x]["team"].str_team)
+                                + "/"
+                            )
                         conn.send(str.encode(rep))
-
-
 
                 elif reply == "kill":
                     conn.sendall(str.encode("/"))
@@ -103,9 +105,7 @@ class Server:
         del self.players[conn]
         conn.close()
 
-
     def server_run(self):
-
 
         print("Starting host")
         print(socket.gethostbyname(socket.gethostname()))
@@ -136,9 +136,9 @@ class Server:
             print("SERVER: Connected to: ", addr)
             self.players[conn] = {
                 "username": "",
-                "team" : placeholder,
-                "ingame" : False,
-                "data" : []
+                "team": placeholder,
+                "ingame": False,
+                "data": [],
             }
             print("SERVER: CREATING A THREAD TO", addr)
 

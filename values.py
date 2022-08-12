@@ -1,7 +1,7 @@
 from core.player import Player
 
 BLACK = [0, 0, 0]
-WHITE = [255,255,255]
+WHITE = [255, 255, 255]
 BLUE = [51, 102, 255]
 RED = [255, 0, 102]
 GREEN = [153, 255, 51]

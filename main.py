@@ -21,6 +21,8 @@ from hud_elements.button import *
 from hud_elements.chat import Chat
 import gamestates.battle
 import gamestates.menu
+import gamestates.loadscreen
+
 import socket
 from networking.datagatherer import DataGatherer
 
@@ -31,15 +33,18 @@ class Game:
     Game class to contain all information for ease of access.
     """
 
-    def __init__(self, resolution, draw_los = True):
+    def __init__(self, resolution, draw_los=True):
         pygame.init()
         pygame.font.init()
         self.draw_los = draw_los
         self.GT = GameTick
-        self.chat = Chat(self)
+
         self.datagatherer = DataGatherer(self)
 
+        self.load_i = 0
+
         self.resolution = resolution
+        self.loading = ""
 
         self.generation_overflow_tick = self.GT(30)
 
@@ -60,10 +65,12 @@ class Game:
         self.camera_pos_target = [0, 0]
         self.error_message = None
         self.player_team = placeholder
+        self.chat = Chat(self)
         self.connected_players = []
-        self.notification_tick = self.GT(180, oneshot = True)
+        self.notification_tick = self.GT(180, oneshot=True)
         self.notification = ""
-        self.notification_color = [255,255,255]
+        self.notification_color = [255, 255, 255]
+        self.vibration = 0
 
         self.qsc = 1920 / resolution[0]
 
@@ -71,61 +78,17 @@ class Game:
         self.smoothing = 0
 
         self.screen = pygame.display.set_mode(resolution, pygame.FULLSCREEN)
-        load_images(self, self.size_conv)
-        load_sounds(self)
-
-
-
-        self.state = gamestates.menu.Menu(self)
-
-
-
-        print(self.images)
-        print(self.sounds)
-
-        self.clock = pygame.time.Clock()
-        self.map_size = self.images["map"].get_size()
-        self.los_image = pygame.Surface(self.images["map"].get_size()).convert()
-        self.los_image.fill([0, 0, 0])
-        # self.los_image.set_alpha(100)
-        self.los_image.set_colorkey([255, 255, 255])
-
-        gen_map(self, self.images["layout"])
 
         self.render_layers = {
             "1.BOTTOM": [],
             "2.ORE": [],
             "3.BUILDINGS": [],
             "4.NPCS": [],
-            "PARTICLES" : [],
+            "PARTICLES": [],
             "5.CABLE": [],
             "6.HUD": [],
         }
-        #self.render_layers["3.BUILDINGS"].append(Building(self,green_t,"Base",[3,3], image = self.images["base"].copy(), size = [2,2]))
-        #self.render_layers["3.BUILDINGS"].append(Base(self, blue_t, [1,1]))
-        # self.render_layers["3.BUILDINGS"].append(Base(self, red_t, [22,22]))
-        #
-        # self.render_layers["4.NPCS"].append(Builder(self, blue_t, [3,2]))
 
-        for x in self.deposits:
-            self.render_layers["1.BOTTOM"].append(Deposit(self, nature, "Wall", x))
-        self.mine_positions = []
-
-
-
-        for x in self.tiles:
-            self.render_layers["1.BOTTOM"].append(Wall(self, nature, "Wall", x))
-
-        self.next_turn_button = Button(
-            self,
-            self,
-            17,
-            8.5,
-            self.player_team.color,
-            self.images["nextturn"],
-            oneshot=True,
-            oneshot_func=self.end_turn,
-        )
         self.own_turn = True
         self.keypress = []
         self.keypress_held_down = []
@@ -135,6 +98,10 @@ class Game:
         self.fps = 0
         self.idle = 0
         self.iridium_mined = 0
+
+        self.clock = pygame.time.Clock()
+
+        self.state = gamestates.loadscreen.Loadscreen(self)
 
     def get_pos(self, pos):
         # return minus(pos,self.camera_pos, op = "-")
@@ -147,7 +114,7 @@ class Game:
         self.mines = mines
         gen_mines(self)
 
-    def set_notification(self, text, color = [255,255,255]):
+    def set_notification(self, text, color=[255, 255, 255]):
         self.notification_color = color
         self.notification = text
         self.notification_tick.value = 0
@@ -171,35 +138,35 @@ class Game:
                 if x.type == "building":
                     x.los()
 
-
         for i, x in enumerate(self.connected_players):
             if x == self.player_team:
 
                 if i == len(self.connected_players) - 1:
                     next_player = self.connected_players[0]
                 else:
-                    next_player = self.connected_players[i+1]
+                    next_player = self.connected_players[i + 1]
 
-
-                self.set_turn(next_player.str_team, send_info = True)
+                self.set_turn(next_player.str_team, send_info=True)
                 print("Next turn is", next_player)
 
                 return
 
-    def set_turn(self, player, send_info = False):
+    def set_turn(self, player, send_info=False):
         for x in self.connected_players:
             if x.str_team == player:
                 self.turn = x
 
                 if send_info:
-                    self.datagatherer.data.append(f"self.game_ref.set_turn(\"{x.str_team}\")")
+                    self.datagatherer.data.append(
+                        f'self.game_ref.set_turn("{x.str_team}")'
+                    )
 
                 if self.player_team.str_team == x.str_team:
                     print("own turn")
                     self.begin_turn()
                 self.sounds["turn_change"].stop()
                 self.sounds["turn_change"].play()
-                self.set_notification(f"{x.name}'s turn", color = x.color)
+                self.set_notification(f"{x.name}'s turn", color=x.color)
 
                 return
 
@@ -210,26 +177,28 @@ class Game:
             tick = self.notification_tick.value - 20
             alpha = 255
             if tick < 40:
-                alpha = 255 * tick/40
+                alpha = 255 * tick / 40
 
             elif 160 > tick > 100:
-                alpha = 255 * (160 - tick)/60
+                alpha = 255 * (160 - tick) / 60
 
-
-
-            text = self.terminal[100].render(self.notification, False, self.notification_color)
+            text = self.terminal[100].render(
+                self.notification, False, self.notification_color
+            )
             text.set_alpha(alpha)
-            size_1 = round(text.get_size()[1] * (alpha/255)**5 + 5)
+            size_1 = round(text.get_size()[1] * (alpha / 255) ** 5 + 5)
             surf = pygame.Surface((self.resolution[0], size_1)).convert()
             surf.fill(core.func.mult(self.notification_color, (0.15)))
-            surf.set_alpha((alpha/255)**5 * 255)
-            pos = [self.resolution[0]/2 - text.get_rect().center[0], self.resolution[1]/3 - text.get_rect().center[1]]
-            self.screen.blit(surf, [0, pos[1] + text.get_size()[1]/2 - surf.get_size()[1]/2])
+            surf.set_alpha((alpha / 255) ** 5 * 255)
+            pos = [
+                self.resolution[0] / 2 - text.get_rect().center[0],
+                self.resolution[1] / 3 - text.get_rect().center[1],
+            ]
+            self.screen.blit(
+                surf, [0, pos[1] + text.get_size()[1] / 2 - surf.get_size()[1] / 2]
+            )
 
             self.screen.blit(text, pos)
-
-
-
 
     def slot_inside(self, slot):
         return 0 <= slot[0] < self.size_slots[0] and 0 <= slot[1] < self.size_slots[1]
@@ -259,17 +228,14 @@ class Game:
             if connected_last == self.connected_in_scan:
                 break
 
-
-
-
-    def gen_object(self, type, send_info = True, id = False):
-
+    def gen_object(self, type, send_info=True, id=False):
 
         if type.team.str_team == self.player_team.str_team:
             type.team = self.player_team
             if type.type == "npc":
                 self.sounds["spawn"].stop()
                 self.sounds["spawn"].play()
+            self.chat.append(f"{type.name} built.")
             type.center()
 
         print("Generating object....")
@@ -282,7 +248,17 @@ class Game:
             self.render_layers["3.BUILDINGS"].append(obj)
 
         if send_info:
-            self.datagatherer.data.append(f"self.game_ref.gen_object({type.gen_string()}, send_info = False, id = {obj.id})")
+            self.datagatherer.data.append(
+                f"self.game_ref.gen_object({type.gen_string()}, send_info = False, id = {obj.id})"
+            )
+
+    def vibrate(self):
+        if self.vibration > 0:
+            self.camera_pos = [
+                self.camera_pos[0] + random.randint(-self.vibration, self.vibration),
+                self.camera_pos[1] + random.randint(-self.vibration, self.vibration),
+            ]
+            self.vibration -= 1
 
     def renderobjects(self):
 
@@ -308,7 +284,9 @@ class Game:
 
             if x == "LOS":
                 if self.draw_los:
-                    self.screen.blit(self.los_image, minus([0, 0], self.camera_pos, op="-"))
+                    self.screen.blit(
+                        self.los_image, minus([0, 0], self.camera_pos, op="-")
+                    )
                 continue
 
             for obj in self.render_layers[x]:
@@ -345,6 +323,12 @@ class Game:
                             slots.append(core.func.minus(obj.slot, [x, y]))
         return slots
 
+    def cut_cable(self, id):
+        for x in self.return_objects(["5.CABLE"]):
+            if x.id == id:
+                self.render_layers["5.CABLE"].remove(x)
+                return
+
     def check_cable_availablity(self, start, end):
 
         if core.func.get_dist_points(start.center_slot(), end.center_slot()) > 5:
@@ -359,10 +343,16 @@ class Game:
             ):
                 return x
         return False
+
     def calc_energy(self):
         self.player_team.energy_consumption = 0
         self.player_team.energy_generation = 0
-        for x in (x for x in self.return_objects() if x.team == self.player_team and (x.connected_to_base or x.name == "Base" or x.type == "npc")):
+        for x in (
+            x
+            for x in self.return_objects()
+            if x.team == self.player_team
+            and (x.connected_to_base or x.name == "Base" or x.type == "npc")
+        ):
 
             for y in x.build_queue:
                 self.player_team.energy_consumption += y.energy_consumption
@@ -380,9 +370,8 @@ class Game:
             self.player_team.g, self.player_team.energy_generation
         )
 
-
-
     def loop(self):
         self.state.tick()
         self.chat.tick()
+        self.vibrate()
         pygame.display.update()

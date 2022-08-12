@@ -33,15 +33,11 @@ class DataGatherer:
                 if line == "PACKET" or line == "/":
                     continue
                 try:
-                    self.game_ref.chat.append(f"Evaluating line: {line}")
+                    print(f"Evaluating line: {line}")
                     eval(line)
-                    self.game_ref.chat.append("SUCCESS")
+                    print("SUCCESS")
                 except Exception as e:
-                    self.game_ref.chat.append(f"Evaluation exception: {e}")
-
-
-
-
+                    print(f"Evaluation exception: {e}")
 
     def threaded_data_gather(self):
         self.gathering = True
@@ -52,7 +48,7 @@ class DataGatherer:
             self.data.remove(x)
         packet += "END#"
 
-        #print(f"Sending from player {self.player_team.name}\n{packet}")
+        # print(f"Sending from player {self.player_team.name}\n{packet}")
 
         reply = self.game_ref.network.send(packet)
 

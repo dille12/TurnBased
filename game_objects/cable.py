@@ -6,8 +6,9 @@ import time
 import math
 import random
 
+
 class Cable(Game_Object):
-    def __init__(self, game, team, game_tick, dont_freeze = False):
+    def __init__(self, game, team, game_tick, dont_freeze=False):
 
         super().__init__(game, team)
 
@@ -19,7 +20,7 @@ class Cable(Game_Object):
         self.slot_size = [0, 0]
         self.slot = [-1, -1]
         self.type = "cable"
-        self.freeze_tick = game_tick(150, oneshot = True)
+        self.freeze_tick = game_tick(150, oneshot=True)
         self.dont_freeze = dont_freeze
         self.frozen = False
         self.connected = True
@@ -27,17 +28,14 @@ class Cable(Game_Object):
     def __str__(self):
         return f"Cable {self.start_obj} {self.end_obj}"
 
-    def tick(self, color_override = False, ignore_camera = False):
+    def tick(self, color_override=False, ignore_camera=False):
 
-        self.camera_pos = self.game_ref.delta if not ignore_camera else [0,0]
+        self.camera_pos = self.game_ref.delta if not ignore_camera else [0, 0]
         self.Simulate()
 
         for x in self.sticks:
 
-            x.render(
-                self.game_ref.screen,
-                self.team if not color_override else color_override
-            )
+            x.render(self.game_ref.screen, self.team, color_override)
 
     def update(self):
         if self.start_obj.connected_to_base and not self.end_obj.connected_to_base:
@@ -68,13 +66,17 @@ class Cable(Game_Object):
             print(self.end_obj)
             self.game_ref.connected_in_scan += 2
 
-    def generate(self, start, end, hanging, subdiv=2, start_obj=None, end_obj=None):
+    def generate(
+        self, start, end, hanging, subdiv=2, start_obj=None, end_obj=None, id=None
+    ):
         print("Starting generation")
         self.points.append(Point(np.array(start), True))
         self.startpoint = self.points[-1]
         self.points.append(Point(np.array(end), True))
         self.endpoint = self.points[-1]
 
+        if id != None:
+            self.id = id
 
         self.sticks.append(Stick(self, self.points[0], self.points[1], self.game_ref))
 
@@ -94,14 +96,12 @@ class Cable(Game_Object):
                 if self.start_obj == None or self.end_obj == None:
                     continue
 
-
                 if self.startpoint in [x.point1, x.point2]:
                     self.start_obj.connected_cables.append(x)
                     x.start_object = self.start_obj
                 if self.endpoint in [x.point1, x.point2]:
                     self.end_obj.connected_cables.append(x)
                     x.start_object = self.end_obj
-
 
         print("Cable generated")
         return self
@@ -128,10 +128,6 @@ class Cable(Game_Object):
         else:
             r = 3
 
-
-
-
-
         for i in range(r):
             for stick in self.sticks:
                 stick_centre = (stick.point1.pos + stick.point2.pos) / 2
@@ -140,9 +136,6 @@ class Cable(Game_Object):
                     stick.point1.pos = stick_centre + stick_dir * stick.length / 2
                 if not stick.point2.locked:
                     stick.point2.pos = stick_centre - stick_dir * stick.length / 2
-
-
-
 
 
 class Point:
@@ -175,28 +168,37 @@ class Stick:
         self.connected_sticks = []
         self.game_ref = game
 
-        self.game_tick = self.game_ref.GT(30, oneshot = True)
+        self.game_tick = self.game_ref.GT(30, oneshot=True)
         self.game_tick.value = self.game_tick.max_value
         self.i = 0
         self.start_object = None
 
-
-
-    def render(self, screen, color):
+    def render(self, screen, color, color_override):
 
         self.game_tick.tick()
 
-        multiplier = (self.game_tick.max_value - self.game_tick.value) / self.game_tick.max_value
+        multiplier = (
+            self.game_tick.max_value - self.game_tick.value
+        ) / self.game_tick.max_value
+        if color_override:
+            multiplier = multiplier / 2 + 0.5
+            color = color_override
 
         if self.i == 3:
-            if random.uniform(0,1) < 0.1:
-                for i in range(2,4):
-                    self.parent_cable.gen_spark(self.point1.pos + np.array(self.game_ref.camera_pos))
+            if random.uniform(0, 1) < 0.1:
+                for i in range(2, 4):
+                    self.parent_cable.gen_spark(
+                        self.point1.pos + np.array(self.game_ref.camera_pos)
+                    )
             self.game_tick.value = 0
             for x in (x for x in self.connected_sticks if x.i == 0):
                 x.i = 4
 
             if self.start_object:
+
+                for i in range(2, 4):
+                    self.start_object.gen_spark(self.start_object.slot_to_pos_center())
+
                 for x in self.start_object.connected_cables:
                     if x == self or x.i != 0:
                         continue
@@ -205,7 +207,13 @@ class Stick:
         if self.i > 0:
             self.i -= 1
 
-        pygame.draw.line(screen, mult(color, multiplier) if color != [0,0,0] else [0,0,0], self.point1.pos, self.point2.pos, 4)
+        pygame.draw.line(
+            screen,
+            mult(color, multiplier) if color != [0, 0, 0] else [0, 0, 0],
+            self.point1.pos,
+            self.point2.pos,
+            4,
+        )
 
     def subdivide(self, points, sticks, lower_center):
         center = (self.point1.pos + self.point2.pos) / 2
@@ -214,8 +222,12 @@ class Stick:
         )
         points.append(center_point)
         sticks.remove(self)
-        sticks.append(Stick(self.parent_cable, self.point1, center_point, self.game_ref))
-        sticks.append(Stick(self.parent_cable, self.point2, center_point, self.game_ref))
+        sticks.append(
+            Stick(self.parent_cable, self.point1, center_point, self.game_ref)
+        )
+        sticks.append(
+            Stick(self.parent_cable, self.point2, center_point, self.game_ref)
+        )
 
 
 def normalize(v):

@@ -18,15 +18,16 @@ class Button:
         active=False,
         argument=None,
         key_press="",
-        scale = False,
+        scale=False,
     ):
-        self.x = slotx
-        self.y = sloty
+
         self.game_ref = game
+        self.x = slotx / self.game_ref.size_conv[0]
+        self.y = sloty / self.game_ref.size_conv[1]
         self.parent_ref = obj
         self.team = team
         if scale:
-            self.image = pygame.transform.scale(image.copy(),[100,100])
+            self.image = pygame.transform.scale(image.copy(), [100, 100])
         else:
             self.image = image.copy()
         self.image2 = core.image_transform.colorize_alpha(
@@ -75,9 +76,10 @@ class Button:
                 color=self.team,
             )
 
-        if ((
-            inside and "mouse0" in self.game_ref.keypress
-        ) or self.key_press in self.game_ref.keypress) and self.game_ref.own_turn:
+        if (
+            (inside and "mouse0" in self.game_ref.keypress)
+            or (self.key_press in self.game_ref.keypress and not self.game_ref.chat.chatbox.active)
+        ) and self.game_ref.own_turn:
             self.game_ref.sounds["button"].stop()
             self.game_ref.sounds["button"].play()
 

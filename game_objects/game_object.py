@@ -4,8 +4,10 @@ import core.func
 import time
 import math
 import random
-
+import numpy as np
 from game_objects.particles.spark import Spark
+from game_objects.particles.ash import Ash
+from game_objects.particles.explosion_particles import ExplosionParticle
 
 
 class Game_Object:
@@ -16,7 +18,7 @@ class Game_Object:
         self.size = [100 * (size[0]), 100 * (size[1])]
         self.slot_size = size
 
-        self.id = random.randint(0,2**16)
+        self.id = random.randint(0, 2**16)
 
         self.classname = self.name.replace(" ", "")
         self.active = False
@@ -75,7 +77,6 @@ class Game_Object:
         ):
             self.shootables.append(x)
 
-
     def set_dict(self, list):
         for x in list:
             self.__dict__[x] = list[x]
@@ -87,10 +88,11 @@ class Game_Object:
         return list2
 
     def exec_on_obj(self, id, exec):
-        self.game_ref.datagatherer.data.append(f"self.game_ref.find_object_id({id}).{exec}")
+        self.game_ref.datagatherer.data.append(
+            f"self.game_ref.find_object_id({id}).{exec}"
+        )
 
-
-    def send_info(self, list, id_override = False):
+    def send_info(self, list, id_override=False):
 
         if id_override:
             obj = self.game_ref.find_object_id(id_override)
@@ -99,8 +101,9 @@ class Game_Object:
 
         info = obj.get_dict(list)
 
-        self.game_ref.datagatherer.data.append(f"self.game_ref.find_object_id({obj.id}).set_dict({info})")
-
+        self.game_ref.datagatherer.data.append(
+            f"self.game_ref.find_object_id({obj.id}).set_dict({info})"
+        )
 
     def center_slot(self):
         return [self.slot[0] + self.slot_size[0], self.slot[1] + self.slot_size[1]]
@@ -146,21 +149,25 @@ class Game_Object:
         return self.connected_to_base or self.name == "Base"
 
     def create_spark(self):
-        if random.uniform(0,1) > 0.04 or not self.connected_building():
+        if random.uniform(0, 1) > 0.04 or not self.connected_building():
             return
-        token = random.randint(0,1)
+        token = random.randint(0, 1)
         if token:
-            x = random.uniform(self.slot[0]*100, (self.slot[0] + self.slot_size[0])*100)
-            y = self.slot[1]*100 + random.randint(0,1) * self.slot_size[1]*100
+            x = random.uniform(
+                self.slot[0] * 100, (self.slot[0] + self.slot_size[0]) * 100
+            )
+            y = self.slot[1] * 100 + random.randint(0, 1) * self.slot_size[1] * 100
         else:
-            x = self.slot[0]*100 + random.randint(0,1) * self.slot_size[0]*100
-            y = random.uniform(self.slot[1]*100, (self.slot[1] + self.slot_size[1])*100)
-        self.gen_spark([x,y])
+            x = self.slot[0] * 100 + random.randint(0, 1) * self.slot_size[0] * 100
+            y = random.uniform(
+                self.slot[1] * 100, (self.slot[1] + self.slot_size[1]) * 100
+            )
+        self.gen_spark([x, y])
 
     def gen_spark(self, point):
-        self.game_ref.render_layers["PARTICLES"].append(Spark(self.game_ref, point,[random.uniform(-3,3), random.uniform(-3,3)]))
-
-
+        self.game_ref.render_layers["PARTICLES"].append(
+            Spark(self.game_ref, point, [random.uniform(-3, 3), random.uniform(-3, 3)])
+        )
 
     def tick_queue(self):
 
@@ -212,27 +219,59 @@ class Game_Object:
             self.kill()
             self.game_ref.activated_object = None
             self.game_ref.scan_connecting_cables()
+            self.game_ref.datagatherer.data.append(
+                f"self.game_ref.find_object_id({self.id}).kill()"
+            )
+
+    def own(self):
+        return self.team == self.game_ref.player_team
 
     def kill(self):
 
-        if self.type == "building":
-            for x in self.game_ref.return_objects():
-                if x.type != "cable":
+        x, y = self.slot_to_pos_center()
+        print(x, y)
+
+        for i in range(16):
+            self.game_ref.render_layers["PARTICLES"].append(Ash(self.game_ref, [x, y]))
+        for i in range(80):
+            self.game_ref.render_layers["PARTICLES"].append(
+                ExplosionParticle(self.game_ref, [x, y])
+            )
+
+        self.game_ref.vibration = 25
+
+        max_dist = 5000
+
+        core.func.pick_random_from_list([self.game_ref.sounds["death1"], self.game_ref.sounds["death2"], self.game_ref.sounds["death3"]]).play()
+        if self.own():
+            self.game_ref.chat.append(f"{self.name} has been destroyed.")
+
+        for x1 in self.game_ref.return_objects():
+            if self.type == "building":
+                if x1.type != "cable":
                     continue
-                print(x)
-                if x.start_obj == self or x.end_obj == self:
-                    self.game_ref.render_layers["5.CABLE"].remove(x)
-                    print("Killing", x)
+                if x1.start_obj == self or x1.end_obj == self:
+                    self.game_ref.render_layers["5.CABLE"].remove(x1)
+                    print("Killing", x1)
+
+        for cable1 in self.game_ref.return_objects(["5.CABLE"]):
+            for point in cable1.points:
+                if not point.locked:
+                    dist = core.func.get_dist_points([x,y], point.pos)
+                    if dist < max_dist:
+                        cable1.frozen = False
+                        cable1.freeze_tick.value = 0
+                        angle = core.func.get_angle([x,y], point.pos, radians = True)
+                        nudge = np.array([math.cos(angle) * (max_dist-dist)/100, math.sin(angle) * (max_dist-dist)/100])
+                        point.pos += nudge
+
 
         self.game_ref.scan_connecting_cables()
-
 
         for x in self.game_ref.render_layers.keys():
             for obj in self.game_ref.render_layers[x]:
                 if obj == self:
                     self.game_ref.render_layers[x].remove(self)
-
-
 
     def slot_to_pos_center(self):
         return [
@@ -355,7 +394,7 @@ class Game_Object:
                         x + 5 + 92,
                         y + 5 + x_1 * round(93 / self.movement_range),
                         6,
-                        round(93 / self.movement_range) - 10
+                        round(93 / self.movement_range) - 10,
                     ],
                 )
 
@@ -366,9 +405,9 @@ class Game_Object:
                         x + 5 + 92,
                         y + 5 + x_1 * round(93 / self.movement_range),
                         6,
-                        round(93 / self.movement_range) - 10
+                        round(93 / self.movement_range) - 10,
                     ],
-                    1
+                    1,
                 )
 
         if self.team != nature:
@@ -378,21 +417,16 @@ class Game_Object:
                 [
                     x + 5,
                     y + 5 + self.size[1],
-                    round(self.size[0]*0.95 * self.hp/self.hp_max),
-                    6
-                ]
+                    round(self.size[0] * 0.95 * self.hp / self.hp_max),
+                    6,
+                ],
             )
 
             pygame.draw.rect(
                 self.game_ref.screen,
                 core.func.mult(self.team.color, 0.5),
-                [
-                    x + 3,
-                    y + 3 + self.size[1],
-                    round(self.size[0] * 0.95)+4,
-                    10
-                ],
-                1
+                [x + 3, y + 3 + self.size[1], round(self.size[0] * 0.95) + 4, 10],
+                1,
             )
 
     def rotate(self, target):
@@ -400,18 +434,14 @@ class Game_Object:
         angle = math.degrees(math.atan2(self.pos, target))
         image_rot, rect = core.func.rot_center(self.image, angle, 0, 0)
 
-
     def gen_string(self):
 
         return f"{self.classname}(self.game_ref, {self.team.str_team}, {self.slot})"
-
 
     def click(self):
 
         if not self.check_los():
             return
-
-
 
         x, y = self.slot_to_pos()
 
@@ -437,7 +467,7 @@ class Game_Object:
     def deactivate_other(self):
         print("Deactivating other from", self)
         for x in self.game_ref.render_layers.keys():
-            for obj in self.game_ref.return_objects(["3.BUILDINGS","4.NPCS"]):
+            for obj in self.game_ref.return_objects(["3.BUILDINGS", "4.NPCS"]):
                 if obj != self:
                     obj.activate(False)
 
@@ -502,7 +532,10 @@ class Game_Object:
                             )
                             last_x_y = pos.copy()
 
-                        if "mouse2" in self.game_ref.keypress and self.game_ref.own_turn:
+                        if (
+                            "mouse2" in self.game_ref.keypress
+                            and self.game_ref.own_turn
+                        ):
                             self.moving_route = self.route_to_pos
                             self.activate(False)
                             self.move_tick.value = self.move_tick.max_value

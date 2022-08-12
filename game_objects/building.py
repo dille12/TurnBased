@@ -19,7 +19,7 @@ class Building(Game_Object):
 
         self.connected_cables = []
 
-        self.cable_send_tick = self.game_ref.GT(30)
+        self.cable_send_tick = self.game_ref.GT(45)
 
         self.c_building = False
 
@@ -37,14 +37,22 @@ class Building(Game_Object):
                 image.copy(), pygame.Color(255, 0, 0), 120
             )
 
-
     def create_cable(self):
+
+        if not self.game_ref.own_turn:
+            return
+
         x, y = self.slot_to_pos()
         if "mouse2" in self.game_ref.keypress:
             if point_inside(self.game_ref.mouse_pos, [x, y], self.size):
                 if self.cable == None and self.active == True:
                     self.game_ref.sounds["cable_s"].play()
-                    self.cable = Cable(self.game_ref, self.team.color, self.game_ref.GT, dont_freeze = True)
+                    self.cable = Cable(
+                        self.game_ref,
+                        self.team.color,
+                        self.game_ref.GT,
+                        dont_freeze=True,
+                    )
                     self.cable.generate([x, y], self.game_ref.mouse_pos, 3, 4)
                 else:
                     self.cable = None
@@ -70,7 +78,11 @@ class Building(Game_Object):
             self.cable.startpoint.pos = np.array(self.slot_to_pos_c_cam())
             self.cable.endpoint.pos = np.array(self.game_ref.mouse_pos)
 
-            self.dist = round(core.func.get_dist_points(self.cable.startpoint.pos, self.cable.endpoint.pos))
+            self.dist = round(
+                core.func.get_dist_points(
+                    self.cable.startpoint.pos, self.cable.endpoint.pos
+                )
+            )
 
             text = f"{self.dist}/500 u."
 
@@ -81,7 +93,6 @@ class Building(Game_Object):
                     and point_inside(
                         self.game_ref.mouse_pos, obj.slot_to_pos(), obj.size
                     )
-
                 ):
                     x, y = obj.slot_to_pos()
                     if self.game_ref.check_cable_availablity(self, obj):
@@ -102,8 +113,11 @@ class Building(Game_Object):
                                 self.cable = None
                                 self.game_ref.sounds["cable_e"].play()
 
-                                self.game_ref.scan_connecting_cables()
+                                self.game_ref.datagatherer.data.append(
+                                    f"self.game_ref.cut_cable({existing.id})"
+                                )
 
+                                self.game_ref.scan_connecting_cables()
 
                         else:
 
@@ -131,12 +145,15 @@ class Building(Game_Object):
                                     end_obj=obj,
                                 )
 
-                                self.game_ref.datagatherer.data.append(f"self.game_ref.render_layers[\"5.CABLE\"].append(Cable(self.game_ref, {self.team.color}, self.game_ref.GT).generate(self.game_ref.find_object_id({self.id}).slot_to_pos_c_cam(),self.game_ref.find_object_id({obj.id}).slot_to_pos_c_cam(),0, 3, start_obj = self.game_ref.find_object_id({self.id}), end_obj = self.game_ref.find_object_id({obj.id})))")
-
+                                self.game_ref.datagatherer.data.append(
+                                    f'self.game_ref.render_layers["5.CABLE"].append(Cable(self.game_ref, {self.team.color}, self.game_ref.GT).generate(self.game_ref.find_object_id({self.id}).slot_to_pos_c_cam(),self.game_ref.find_object_id({obj.id}).slot_to_pos_c_cam(),0, 3, start_obj = self.game_ref.find_object_id({self.id}), end_obj = self.game_ref.find_object_id({obj.id}), id = {cable_temp.id}))'
+                                )
 
                                 #
 
-                                self.game_ref.render_layers["5.CABLE"].append(cable_temp)
+                                self.game_ref.render_layers["5.CABLE"].append(
+                                    cable_temp
+                                )
                                 self.game_ref.scan_connecting_cables()
                                 print("Created static cable")
                                 break
@@ -156,11 +173,19 @@ class Building(Game_Object):
 
             if self.cable != None:
                 if existing:
-                    existing.tick(color_override = [255,0,0], ignore_camera = True)
+                    existing.tick(color_override=[255, 0, 0], ignore_camera=True)
                 else:
                     self.cable.tick()
 
-            core.func.render_text(self.game_ref, text, core.func.minus(self.game_ref.mouse_pos, [20,-20]), 20, color = self.team.color if self.dist < 500 and text != "CUT" else [255,0,0])
+            core.func.render_text(
+                self.game_ref,
+                text,
+                core.func.minus(self.game_ref.mouse_pos, [20, -20]),
+                20,
+                color=self.team.color
+                if self.dist < 500 and text != "CUT"
+                else [255, 0, 0],
+            )
 
     def render_buildable(self, occ_slots):
         unplaceable = False
@@ -171,7 +196,10 @@ class Building(Game_Object):
                     if self.slot not in self.requirement:
                         unplaceable = True
 
-                if [self.slot[0] + x_1, self.slot[1] + y_1] in occ_slots or not self.game_ref.slot_inside(self.slot):
+                if [
+                    self.slot[0] + x_1,
+                    self.slot[1] + y_1,
+                ] in occ_slots or not self.game_ref.slot_inside(self.slot):
                     unplaceable = True
         if not unplaceable:
             if not self.check_los():
@@ -227,30 +255,44 @@ class Building(Game_Object):
         self.render_buildable(occ_slots)
 
     def get_resource(self):
-        if self.name != "Mining Station" or self.resource != "" or not self.connected_building():
+        if (
+            self.name != "Mining Station"
+            or self.resource != ""
+            or not self.connected_building()
+        ):
             return
-        self.resource = [x for x in self.game_ref.render_layers["1.BOTTOM"] if x.type == "mine" and x.slot == self.slot][0].resource
+        self.resource = [
+            x
+            for x in self.game_ref.render_layers["1.BOTTOM"]
+            if x.type == "mine" and x.slot == self.slot
+        ][0].resource
         print(self.resource)
         if self.resource == "Iridium":
-            self.game_ref.datagatherer.data.append(f"self.game_ref.set_notification('{self.resource} found by {self.game_ref.player_team.name}!', color = {self.game_ref.player_team.color})")
-            self.game_ref.set_notification('Iridium found!', color = self.game_ref.player_team.color)
+            self.game_ref.datagatherer.data.append(
+                f"self.game_ref.set_notification('{self.resource} found by {self.game_ref.player_team.name}!', color = {self.game_ref.player_team.color})"
+            )
+            self.game_ref.set_notification(
+                "Iridium found!", color=self.game_ref.player_team.color
+            )
 
     def tick_animation(self):
         if self.top_layer:
             x1, y1 = self.slot_to_pos()
             if self.connected_building():
                 self.animate_tick.tick()
-            posx = (self.move_between[1][0] - self.move_between[0][0])/2 + math.sin(math.pi*2*self.animate_tick.value/self.animate_tick.max_value) * (self.move_between[1][0] - self.move_between[0][0])/2
-            posy = (self.move_between[1][1] - self.move_between[0][1])/2 + math.sin(math.pi*2*self.animate_tick.value/self.animate_tick.max_value) * (self.move_between[1][1] - self.move_between[0][1])/2
+            posx = (self.move_between[1][0] - self.move_between[0][0]) / 2 + math.sin(
+                math.pi * 2 * self.animate_tick.value / self.animate_tick.max_value
+            ) * (self.move_between[1][0] - self.move_between[0][0]) / 2
+            posy = (self.move_between[1][1] - self.move_between[0][1]) / 2 + math.sin(
+                math.pi * 2 * self.animate_tick.value / self.animate_tick.max_value
+            ) * (self.move_between[1][1] - self.move_between[0][1]) / 2
             self.game_ref.screen.blit(self.top_layer, [x1 + posx, y1 + posy])
-
 
     def cable_send(self):
         if self.name == "Base":
             if self.cable_send_tick.tick():
                 for x in self.connected_cables:
                     x.i = 30
-
 
     def tick(self):
         self.los()

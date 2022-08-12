@@ -3,14 +3,14 @@ import pyperclip
 
 
 class TextBox:
-    def __init__(self, game, pos, default, secret=False):
+    def __init__(self, game, pos, default, secret=False, size = 20):
         self.pos = pos
         self.game_ref = game
         self.box = pygame.Rect(self.pos[0], self.pos[1], 140, 32)
         self.color_active = pygame.Color([255, 0, 0])
         self.color_inactive = pygame.Color([100, 100, 100])
         self.color = self.color_inactive
-        self.font = game.terminal[20]
+        self.font = game.terminal[size]
         self.text = str(default)
         self.active = False
         self.secret = secret
@@ -67,4 +67,4 @@ class TextBox:
         # Blit the text.
         self.game_ref.screen.blit(txt_surface, (self.pos[0] + 5, self.pos[1] + 5))
         # Blit the input_box rect.
-        pygame.draw.rect(self.game_ref.screen, self.color, self.box, 2)
+        pygame.draw.rect(self.game_ref.screen, self.color_active if self.active else self.color_inactive, self.box, 2)

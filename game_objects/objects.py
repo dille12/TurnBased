@@ -178,7 +178,7 @@ class Builder(NPC):
                 self.game_ref.images["elec_tower"],
                 oneshot=True,
                 key_press="1",
-                scale = True,
+                scale=True,
                 oneshot_func=self.npc_build,
                 argument=ElectricTower(self.game_ref, self.team, [-1, -1]),
             ),
@@ -191,7 +191,7 @@ class Builder(NPC):
                 self.game_ref.images["energywell"],
                 oneshot=True,
                 key_press="2",
-                scale = True,
+                scale=True,
                 oneshot_func=self.npc_build,
                 argument=EnergyWell(self.game_ref, self.team, [-1, -1]),
             ),
@@ -204,7 +204,7 @@ class Builder(NPC):
                 self.game_ref.images["mining_base"],
                 oneshot=True,
                 key_press="3",
-                scale = True,
+                scale=True,
                 oneshot_func=self.npc_build,
                 argument=MiningStation(self.game_ref, self.team, [-1, -1]),
             ),
@@ -217,7 +217,7 @@ class Builder(NPC):
                 self.game_ref.images["barracks"],
                 oneshot=True,
                 key_press="4",
-                scale = True,
+                scale=True,
                 oneshot_func=self.npc_build,
                 argument=Barracks(self.game_ref, self.team, [-1, -1]),
             ),
@@ -261,7 +261,6 @@ class Base(Building):
                 oneshot_func=self.purchase,
                 argument=Builder(self.game_ref, self.team, [-1, -1]),
             ),
-
         ]
         if self.team == self.game_ref.player_team:
             print("CENTERING IN START")
@@ -292,6 +291,7 @@ class ElectricTower(Building):
     def copy(self):
         return ElectricTower(self.game_ref, self.team, self.slot)
 
+
 class Barracks(Building):
     def __init__(self, game, team, slot):
         hp = 350
@@ -303,8 +303,6 @@ class Barracks(Building):
         self.buildtime = 1
         self.energy_generation = 0
         self.energy_consumption = 3
-
-
 
         super().__init__(game, team, name, slot, size=size, hp=hp, image=image)
 
@@ -385,17 +383,12 @@ class MiningStation(Building):
 
         self.top_layer = colorize_alpha(
             self.game_ref.images["mining_top"].copy(),
-            pygame.Color(
-                self.team.color[0], self.team.color[1], self.team.color[2]
-            ),
+            pygame.Color(self.team.color[0], self.team.color[1], self.team.color[2]),
             50,
-            )
-        self.move_between = [[0,0], [0,50]]
+        )
+        self.move_between = [[0, 0], [0, 50]]
         self.animate_tick = self.game_ref.GT(120)
         self.resource = ""
-
-
-
 
     def copy(self):
         return MiningStation(self.game_ref, self.team, self.slot)
