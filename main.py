@@ -103,6 +103,23 @@ class Game:
 
         self.state = gamestates.loadscreen.Loadscreen(self)
 
+    def play_sound(self, name):
+        list = []
+        i = 1
+        while True:
+            try:
+                list.append(self.sounds[name + str(i)])
+                i += 1
+            except Exception as e:
+                break
+        if list == []:
+            print("No sound could be found")
+            return
+        for x in list:
+            x.stop()
+        core.func.pick_random_from_list(list).play()
+
+
     def get_pos(self, pos):
         # return minus(pos,self.camera_pos, op = "-")
         return minus(minus(pos, self.camera_pos, op="-"), self.size_conv, op="/")

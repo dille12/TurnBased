@@ -101,6 +101,17 @@ def draw_HUD(game):
 
     pygame.draw.rect(
         game.screen,
+        BLACK,
+        [
+            x - 300,
+            y - 100,
+            300,
+            100,
+        ],
+    )
+
+    pygame.draw.rect(
+        game.screen,
         color,
         [
             x - 300,
@@ -110,8 +121,8 @@ def draw_HUD(game):
         ],
     )
 
-    game.screen.blit(game.player_team.nrg, [x - 300, y - 100])
-    game.screen.blit(game.images["nrg_icon"], [x - 290, y - 100])
+    game.screen.blit(game.images["nrg"], [x - 300, y - 100])
+    blit_glitch(game, game.player_team.nrg, [x - 295, y - 95], glitch = 2 + game.vibration)
 
     if color == [255, 0, 0]:
         render_text(
@@ -129,10 +140,11 @@ def draw_HUD(game):
 
     #
 
-    render_text(
+    render_text_glitch(
         game,
         f"ENERGY CONSUMPTION",
         [x - 240, y - 91],
         21,
         color=game.player_team.color,
+        glitch = 2 + game.vibration
     )

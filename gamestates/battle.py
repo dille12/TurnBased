@@ -49,7 +49,7 @@ class Battle:
             )
 
         for x in self.game_ref.connected_players:
-            x.nrg = colorize(self.game_ref.images["nrg"], pygame.Color(x.color))
+            x.nrg = colorize(self.game_ref.images["nrg_icon"], pygame.Color(x.color))
 
         pygame.mixer.music.stop()
 

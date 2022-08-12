@@ -34,6 +34,25 @@ def render_text(
 
     game.screen.blit(text, pos)  #
 
+def blit_glitch(game, image, pos, glitch = 2):
+    upper_pos = 0
+    lower_pos = random.randint(2, 5)
+    image_size = image.get_size()
+    while 1:
+        if random.randint(1, 5) == 1:
+            game.screen.blit(
+                image,
+                [pos[0] + random.randint(-glitch, glitch), pos[1] + upper_pos],
+                area=[0, upper_pos, image_size[0], lower_pos],
+            )
+        if lower_pos == image_size[1]:
+            break
+        upper_pos = lower_pos
+        lower_pos += random.randint(2, 5)
+        if lower_pos >= image_size[1]:
+            lower_pos = image_size[1]
+
+
 
 def render_text_glitch(
     game, string, pos, font_size, color=[255, 255, 255], centerx=False, glitch=10

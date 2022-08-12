@@ -43,7 +43,7 @@ class TextBox:
                 self.backspace_tick = 0
             for event in self.game_ref.events:
                 if event.type == pygame.KEYDOWN and self.active:
-                    self.game_ref.sounds["menu1"].play()
+                    self.game_ref.play_sound("type")
                     if (
                         pygame.key.get_pressed()[pygame.K_v]
                         and pygame.key.get_pressed()[pygame.K_LCTRL]
