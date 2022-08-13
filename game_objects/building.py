@@ -92,7 +92,7 @@ class Building(Game_Object):
                     if self.game_ref.check_cable_availablity(self, obj):
                         existing = self.game_ref.cable_exists(self, obj)
                         if existing:
-                            text = "CUT"
+
 
                             pygame.draw.rect(
                                 self.game_ref.screen,
@@ -177,7 +177,8 @@ class Building(Game_Object):
                     )
                 )
 
-                text = f"{self.dist}/500 u."
+                text = f"{self.dist}/500 u." if not existing else "CUT"
+
 
 
                 core.func.render_text(

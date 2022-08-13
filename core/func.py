@@ -34,7 +34,7 @@ def render_text(
 
     game.screen.blit(text, pos)  #
 
-def blit_glitch(game, image, pos, glitch = 2):
+def blit_glitch(game, image, pos, glitch = 2, diagonal = False):
     upper_pos = 0
     lower_pos = random.randint(2, 5)
     image_size = image.get_size()
@@ -42,7 +42,7 @@ def blit_glitch(game, image, pos, glitch = 2):
         if random.randint(1, 5) == 1:
             game.screen.blit(
                 image,
-                [pos[0] + random.randint(-glitch, glitch), pos[1] + upper_pos],
+                [pos[0] + random.randint(-glitch, glitch), pos[1] + upper_pos + (0 if not diagonal else random.randint(-glitch, glitch))],
                 area=[0, upper_pos, image_size[0], lower_pos],
             )
         if lower_pos == image_size[1]:

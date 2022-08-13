@@ -7,6 +7,7 @@ from game_objects.deposit import *
 from game_objects.mine import *
 import gamestates.menu
 from hud_elements.textbox import TextBox
+import time
 
 
 def load(game):
@@ -33,7 +34,7 @@ def load(game):
 
     game.chat.chatbox = TextBox(game, [game.resolution[0]-200,90], "", size = 35)
 
-    print("Complete")
+    game.loading = "Complete"
     print(game.load_i)
 
     game.state = gamestates.menu.Menu(game)

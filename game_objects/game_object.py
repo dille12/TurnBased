@@ -516,8 +516,14 @@ class Game_Object:
         target = self.pos_to_slot(self.game_ref.get_pos_rev(self.game_ref.mouse_pos))
         x,y = self.slot_to_pos_c(target, center = False, no_cam = True)
         x1,y1 = self.slot_to_pos_c(target, center = False, no_cam = False)
-
+        non_reachable = False
+        if self.route_to_pos != []:
+            if self.route_to_pos[-1] != target:
+                non_reachable = True
         if not self.check_slot_los(x,y) or target in self.game_ref.get_occupied_slots():
+            non_reachable = True
+
+        if non_reachable:
             self.route_to_pos = []
             self.target_pos = [-1,-1]
             pygame.draw.rect(
@@ -549,18 +555,38 @@ class Game_Object:
         if not route:
             route = self.route_to_pos
         last_x_y = core.func.minus(self.slot.copy(), [0.5, 0.5])
-
+        color = self.team.color.copy()
+        turn = 0
         for i, pos in enumerate(route):
-            pos = core.func.minus(pos.copy(), [0.5, 0.5])
-            pygame.draw.line(
-                self.game_ref.screen,
-                self.team.color if i <= self.turn_movement else [255,0,0],
-                self.slot_to_pos_c(last_x_y),
-                self.slot_to_pos_c(pos),
-                4,
-            )
-            last_x_y = pos.copy()
+            turn_indicator = False
+            if i == self.turn_movement+1 or (i > self.turn_movement and (i-1)%self.movement_range == 0):
 
+                color = core.func.mult(color,0.8)
+                turn += 1
+                turn_indicator = True
+            pos = core.func.minus(pos.copy(), [0.5, 0.5])
+
+            x1, y1 = self.slot_to_pos_c(last_x_y)
+            x2, y2 = self.slot_to_pos_c(pos)
+
+            origin = [min([x1,x2])-5, min([y1,y2])-5]
+
+            surf = pygame.Surface([abs(x1-x2)+10, abs(y1-y2)+10], pygame.SRCALPHA, 32).convert_alpha()
+
+
+            pygame.draw.line(
+                surf,
+                color,
+                [x1-origin[0]+5, y1-origin[1]+5],
+                [x2-origin[0]+5, y2-origin[1]+5],
+                7,
+            )
+
+            core.func.blit_glitch(self.game_ref, surf, origin, glitch = 10, diagonal = True)
+
+            if turn_indicator:
+                core.func.render_text_glitch(self.game_ref, str(turn), self.slot_to_pos_c(last_x_y), 30, color = [255,255,255], glitch = 1)
+            last_x_y = pos.copy()
 
     def render_routes(self):
         rendered = [0, 0, 0, 0, 0, 0, 0, 0]

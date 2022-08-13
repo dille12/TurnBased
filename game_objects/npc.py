@@ -76,7 +76,7 @@ class NPC(Game_Object):
             minus(minus(self.target, self.slot, op="-"), [0.6, 0.6], op="*"),
         )
 
-        if self.stashed_route != []:
+        if self.stashed_route != [] and self.active and self.own():
             self.render_lines_route(route = self.stashed_route)
 
 
@@ -84,23 +84,19 @@ class NPC(Game_Object):
     def update_routes(self):
         self.routes = self.scan_movement(self.turn_movement)
 
-    def tick(self):
-        self.los()
-
-        if self.moving_route == []:
-            self.click()
-
-        self.activation_smoothing()
-
+    def movement_and_attack_tick(self):
         if self.build == None:
 
             if self.mode == "walk":
 
                 if self.active and "mouse2" in self.game_ref.keypress and self.game_ref.own_turn:
                     self.render_long_routes = True
+                    self.stashed_route = []
+                    self.game_ref.sounds["walking_s"].play()
 
                 if self.render_long_routes:
                     if "mouse2" not in self.game_ref.keypress_held_down:
+                        self.game_ref.sounds["walking_e"].play()
                         if self.route_to_pos != []:
                             self.moving_route = self.route_to_pos.copy()
                             self.route_to_pos = []
@@ -120,6 +116,17 @@ class NPC(Game_Object):
                 )
 
                 self.highlight_enemies()
+
+
+    def tick(self):
+        self.los()
+
+        if self.moving_route == []:
+            self.click()
+
+        self.activation_smoothing()
+
+        self.movement_and_attack_tick()
 
         if "esc" in self.game_ref.keypress:
             self.activate(False)
