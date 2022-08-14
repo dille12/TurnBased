@@ -35,6 +35,6 @@ def load(game):
     game.chat.chatbox = TextBox(game, [game.resolution[0]-200,90], "", size = 35)
 
     game.loading = "Complete"
-    print(game.load_i)
+    print(f"LOADABLE_OBJECTS: {game.load_i}")
 
     game.state = gamestates.menu.Menu(game)

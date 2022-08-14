@@ -49,8 +49,6 @@ def random_gen_mines(game):
 
 
 def gen_mines(game):
-    print("Generating mines")
-    print(game.mines)
     for x, y, ore in game.mines:
         mine = Mine(game, nature, "Wall", [x, y])
         mine.resource = ore

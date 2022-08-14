@@ -244,7 +244,7 @@ class Game_Object:
                 ExplosionParticle(self.game_ref, [x, y])
             )
 
-        self.game_ref.vibration = 25
+        self.game_ref.vibration = 35
 
         max_dist = 5000
 

@@ -23,7 +23,7 @@ class Menu:
     def __init__(self, game):
         self.game_ref = game
         self.name_box = TextBox(
-            self.game_ref, [250, 20], f"Runkkari{random.randint(0,100)}"
+            self.game_ref, [250, 20], f"Client{random.randint(0,100)}"
         )
         self.ip_box = TextBox(
             self.game_ref, [250, 70], self.game_ref.own_ip, secret=False
@@ -203,10 +203,20 @@ class Menu:
         self.game_ref.screen.fill(BLACK)
         if self.game_ref.network:
             self.lobby_tick()
+
         else:
             self.render_text_boxes()
+
             self.host.tick()
             self.join.tick()
+            if self.game_ref.own_ip[:3] == "192":
+                render_text(
+                    self.game_ref,
+                    "Playing locally.",
+                    [50, 350],
+                    30,
+                    color=[255, 0, 0],
+                )
 
         if self.game_ref.error_message != None:
             render_text(

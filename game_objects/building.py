@@ -299,6 +299,8 @@ class Building(Game_Object):
             if self.cable_send_tick.tick():
                 for x in self.connected_cables:
                     x.i = 30
+                # if self.own():
+                #     self.game_ref.play_sound("base_beep")
 
     def tick(self):
         self.los()

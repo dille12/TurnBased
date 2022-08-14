@@ -101,6 +101,7 @@ class NPC(Game_Object):
                             self.moving_route = self.route_to_pos.copy()
                             self.route_to_pos = []
                             self.activate(False)
+                            self.send_info(["moving_route", "turn_movement"])
                         else:
                             self.render_long_routes = False
 

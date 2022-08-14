@@ -23,7 +23,6 @@ def load_images(game, size_conversion):
                 temp = pygame.image.load(f"{mypath}/{x}").convert()
             game.loading = f"{mypath}/{x}"
             size = temp.get_size()
-            print(size)
             image = pygame.transform.scale(
                 temp, [size[0] / size_conversion[0], size[1] / size_conversion[1]]
             )

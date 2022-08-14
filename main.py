@@ -163,6 +163,7 @@ class Game:
             if x.type == "npc" and x.own() and x.turn_movement > 0:
                 x.moving_route = x.stashed_route.copy()
                 x.stashed_route = []
+                x.send_info(["moving_route", "turn_movement"])
 
 
         for i, x in enumerate(self.connected_players):
