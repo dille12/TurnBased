@@ -392,3 +392,143 @@ class MiningStation(Building):
 
     def copy(self):
         return MiningStation(self.game_ref, self.team, self.slot)
+
+
+### TODO ###
+
+class OverclockCenter(Building):
+    pass
+
+class SpecialUnitCenter(Building):
+    pass
+
+class DockingStation(Building):
+    pass
+
+class TransportableBomb(NPC):  ##URANIUM, GALLIUM
+    def __init__(self, game, team, slot):
+        hp = 50
+        name = "Transportable Bomb"
+        image = game.images["PLACHEHOLDER"].copy()
+        self.select_sound = game.sounds["select_tower"]
+        size = [1, 1]
+        self.range = 0
+        self.buildtime = 6
+        self.energy_generation = 0
+        self.energy_consumption = 4
+        self.ore_cost = {"Uranium" : 1, "Gallium" : 1}
+        self.desc = "Slow moving atomic bomb on tracks. Upon detonation destroys every tile adjacent to it."
+        super().__init__(game, team, name, slot, size=size, hp=hp, image=image)
+
+    def copy(self):
+        return TransportableBomb(self.game_ref, self.team, self.slot)
+
+class MissileLauncher(NPC): ### URANIUM
+    def __init__(self, game, team, slot):
+        hp = 25
+        name = "Missile Launcher"
+        image = game.images["PLACHEHOLDER"].copy()
+        self.select_sound = game.sounds["select_tower"]
+        size = [1, 1]
+        self.range = 0
+        self.buildtime = 4
+        self.energy_generation = 0
+        self.energy_consumption = 3
+        self.ore_cost = {"Uranium" : 1}
+        self.desc = "Fires small-scale missiles armed with uranium tipped warheads to a detected tile."
+        super().__init__(game, team, name, slot, size=size, hp=hp, image=image)
+
+    def copy(self):
+        return MissileLauncher(self.game_ref, self.team, self.slot)
+class PhaseCharger(NPC): ### GALLIUM, TUNGSTEN
+    def __init__(self, game, team, slot):
+        hp = 25
+        name = "Phase Charger"
+        image = game.images["PLACHEHOLDER"].copy()
+        self.select_sound = game.sounds["select_tower"]
+        size = [1, 1]
+        self.range = 0
+        self.buildtime = 5
+        self.energy_generation = 0
+        self.energy_consumption = 5
+        self.ore_cost = {"Gallium" : 1, "Tungsten" : 1}
+
+        self.desc = "Can phase through the void to a detected tile."
+        super().__init__(game, team, name, slot, size=size, hp=hp, image=image)
+
+    def copy(self):
+        return PhaseCharger(self.game_ref, self.team, self.slot)
+
+class CombatMech(NPC): ### TUNGSTEN
+    def __init__(self, game, team, slot):
+        hp = 250
+        name = "Combat Mech"
+        image = game.images["PLACHEHOLDER"].copy()
+        self.select_sound = game.sounds["select_tower"]
+        size = [1, 1]
+        self.range = 0
+        self.buildtime = 3
+        self.energy_generation = 0
+        self.energy_consumption = 4
+        self.ore_cost = {"Tungsten" : 1}
+
+        self.desc = "Slow moving mech engineered to combat situations."
+        super().__init__(game, team, name, slot, size=size, hp=hp, image=image)
+
+    def copy(self):
+        return CombatMech(self.game_ref, self.team, self.slot)
+
+class Interceptor(NPC): ### GALLIUM
+    def __init__(self, game, team, slot):
+        hp = 25
+        name = "Interceptor"
+        image = game.images["PLACHEHOLDER"].copy()
+        self.select_sound = game.sounds["select_tower"]
+        size = [1, 1]
+        self.range = 0
+        self.buildtime = 3
+        self.energy_generation = 0
+        self.energy_consumption = 5
+        self.ore_cost = {"Gallium" : 1}
+        self.desc = "Flying unit ignoring all moving limitations."
+        super().__init__(game, team, name, slot, size=size, hp=hp, image=image)
+
+    def copy(self):
+        return Interceptor(self.game_ref, self.team, self.slot)
+
+class FissileCannon(NPC): ##TUNGSTEN, URANIUM
+    def __init__(self, game, team, slot):
+        hp = 25
+        name = "Fissile Cannon"
+        image = game.images["PLACHEHOLDER"].copy()
+        self.select_sound = game.sounds["select_tower"]
+        size = [1, 1]
+        self.range = 0
+        self.buildtime = 3
+        self.energy_generation = 0
+        self.energy_consumption = 5
+        self.ore_cost = {"Tungsten" : 1, "Uranium" : 1}
+        self.desc = "Fires devastating enriched uranium propelled projectiles."
+        super().__init__(game, team, name, slot, size=size, hp=hp, image=image)
+
+    def copy(self):
+        return FissileCannon(self.game_ref, self.team, self.slot)
+
+class Railgunner(NPC): ### TUNGSTEN, URANIUM, GALLIUM
+
+    def __init__(self, game, team, slot):
+        hp = 25
+        name = "Railgunner"
+        image = game.images["PLACHEHOLDER"].copy()
+        self.select_sound = game.sounds["select_tower"]
+        size = [1, 1]
+        self.range = 0
+        self.buildtime = 3
+        self.energy_generation = 0
+        self.energy_consumption = 5
+        self.ore_cost = {"Tungsten" : 1, "Uranium" : 1, "Gallium" : 1}
+        self.desc = "Fires tungstenhardened projectiles by propelling them with electromagnetism."
+        super().__init__(game, team, name, slot, size=size, hp=hp, image=image)
+
+    def copy(self):
+        return FissileCannon(self.game_ref, self.team, self.slot)

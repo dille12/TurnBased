@@ -97,7 +97,7 @@ class Game:
         self.activated_object = None
         self.fps = 0
         self.idle = 0
-        self.iridium_mined = 0
+        self.ores = {"Iridium" : 0, "Gallium" : 0, "Tungsten" : 0, "Uranium" : 0}
 
         self.clock = pygame.time.Clock()
 
@@ -375,6 +375,10 @@ class Game:
     def calc_energy(self):
         self.player_team.energy_consumption = 0
         self.player_team.energy_generation = 0
+
+        for x in self.ores:
+            self.ores[x] = 0
+
         for x in (
             x
             for x in self.return_objects()
@@ -388,8 +392,12 @@ class Game:
 
             self.player_team.energy_consumption += x.energy_consumption
 
-            if x.connected_to_base or x.name == "Base":
+            if x.connected_building():
                 self.player_team.energy_generation += x.energy_generation
+
+                if x.name == "Mining Station":
+                    if x.resource:
+                        self.ores[x.resource] += 1
 
         self.player_team.c = core.func.towards_target_int(
             self.player_team.c, self.player_team.energy_consumption

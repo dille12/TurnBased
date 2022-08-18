@@ -546,6 +546,7 @@ class Game_Object:
         if self.target_pos != target:
 
             if not self.finding_route:
+                print("Computing new route")
                 start_new_thread(core.path_finding.compute, (self, self.slot, target, self.game_ref.get_occupied_slots(), self.game_ref.size_slots))
 
         if self.route_to_pos != []:
