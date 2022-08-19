@@ -19,6 +19,9 @@ class NPC(Game_Object):
         self.target = None
         self.image = image
         self.target_pos = [0,0]
+
+        self.battery_life_max = 8
+        self.battery_life = self.battery_life_max
         self.build = None
         if self.image != None:
             self.image = colorize_alpha(
@@ -46,7 +49,10 @@ class NPC(Game_Object):
         if self.target == None:
             self.target = self.slot.copy()
 
-        if self.turn_movement > 0 and self.moving_route != []:
+        if self.turn_movement > 0 and (not self.own() or self.battery_life > 0) and self.moving_route != []:
+
+
+
             if self.move_tick.tick():
                 self.slot = self.target.copy()
                 self.moving_route.remove(self.moving_route[0])
@@ -63,9 +69,14 @@ class NPC(Game_Object):
                 )
 
                 self.turn_movement -= 1
+                self.battery_life -= 1
                 self.los()
 
                 print(self.moving_route)
+
+        elif self.own() and self.battery_life == 0:
+            self.moving_route = []
+            self.stashed_route = []
 
         elif self.moving_route != []:
             self.stashed_route = self.moving_route.copy()
@@ -84,6 +95,9 @@ class NPC(Game_Object):
     def update_routes(self):
         self.routes = self.scan_movement(self.turn_movement)
 
+    def movement_tick(self):
+        pass
+
     def movement_and_attack_tick(self):
         if self.build == None:
 
@@ -97,8 +111,8 @@ class NPC(Game_Object):
                 if self.render_long_routes:
                     if "mouse2" not in self.game_ref.keypress_held_down:
                         self.game_ref.sounds["walking_e"].play()
-                        if self.route_to_pos != []:
-                            self.moving_route = self.route_to_pos.copy()
+                        if len(self.route_to_pos) > 1:
+                            self.moving_route = self.route_to_pos.copy()[:self.battery_life+1]
                             self.route_to_pos = []
                             #self.activate(False)
                             self.send_info(["moving_route", "turn_movement"])
@@ -116,7 +130,21 @@ class NPC(Game_Object):
                     self.game_ref.screen, [255, 0, 0], [x, y, size, size], 2
                 )
 
-                self.highlight_enemies()
+
+
+                self.highlight_enemies(self.attack, text = "ATTACK")
+
+            elif self.mode == "sabotage" and self.active and self.shots > 0:
+                x, y = self.slot_to_pos_c(minus(self.slot, [-self.range, -self.range]))
+                size = (1 + self.range * 2) * self.game_ref.ss
+                pygame.draw.rect(
+                    self.game_ref.screen, [255, 0, 0], [x, y, size, size], 2
+                )
+
+                self.highlight_enemies(self.shortcircuit, text = "SHORTCIRCUIT")
+
+
+
 
 
     def tick(self):
@@ -135,7 +163,7 @@ class NPC(Game_Object):
 
         self.move()
 
-        self.render()
+        self.render(self)
 
         if self.build != None:
 

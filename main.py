@@ -22,6 +22,8 @@ from hud_elements.chat import Chat
 import gamestates.battle
 import gamestates.menu
 import gamestates.loadscreen
+from game_objects.object_render import render
+
 
 import socket
 from networking.datagatherer import DataGatherer
@@ -143,7 +145,8 @@ class Game:
 
     def begin_turn(self):
         for x in self.return_objects():
-
+            if hasattr(x, "short_circuit_recovery"):
+                x.short_circuit_recovery()
             if hasattr(x, "turn_movement"):
                 x.turn_movement = x.movement_range
             if hasattr(x, "shots"):
@@ -160,10 +163,16 @@ class Game:
             if self.draw_los:
                 if x.type == "building":
                     x.los()
-            if x.type == "npc" and x.own() and x.turn_movement > 0:
-                x.moving_route = x.stashed_route.copy()
-                x.stashed_route = []
-                x.send_info(["moving_route", "turn_movement"])
+            if x.type == "npc" and x.own():
+                if x.stashed_route != [] and x.turn_movement > 0:
+                    x.moving_route = x.stashed_route.copy()
+                    x.stashed_route = []
+                    x.send_info(["moving_route", "turn_movement"])
+
+                elif x.turn_movement > 0:
+                    x.battery_life += x.turn_movement
+                    if x.battery_life > x.battery_life_max:
+                        x.battery_life = x.battery_life_max
 
 
         for i, x in enumerate(self.connected_players):
@@ -230,6 +239,30 @@ class Game:
 
     def slot_inside(self, slot):
         return 0 <= slot[0] < self.size_slots[0] and 0 <= slot[1] < self.size_slots[1]
+
+
+
+
+    def scan_from_building(self, scan_from, block_circuitbreakers = False):
+        list_of_objects = []
+        if scan_from.get_circuit_breaker():
+            return []
+        while 1:
+            connected_last = len(list_of_objects)
+            for cable in self.render_layers["5.CABLE"]:
+                if scan_from in [cable.start_obj, cable.end_obj]:
+                    core.func.append_to_list(list_of_objects, cable.start_obj)
+                    core.func.append_to_list(list_of_objects, cable.end_obj)
+
+                if cable.start_obj in list_of_objects and cable.end_obj not in list_of_objects:
+                    core.func.append_to_list(list_of_objects, cable.end_obj)
+                elif cable.end_obj in list_of_objects and cable.start_obj not in list_of_objects:
+                    core.func.append_to_list(list_of_objects, cable.start_obj)
+
+            if connected_last == len(list_of_objects):
+                return list_of_objects
+
+
 
     def scan_connecting_cables(self):
         print("Scanning cablenetwork")
@@ -383,7 +416,7 @@ class Game:
             x
             for x in self.return_objects()
             if x.team == self.player_team
-            and (x.connected_to_base or x.name == "Base" or x.type == "npc")
+            and (x.connected_building() or x.type == "npc")
         ):
 
             for y in x.build_queue:

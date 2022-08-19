@@ -16,4 +16,4 @@ class Mine(Game_Object):
         self.resource = ""
 
     def tick(self):
-        self.render()
+        self.render(self)

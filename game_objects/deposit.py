@@ -14,4 +14,4 @@ class Deposit(Game_Object):
         self.type = "deposit"
 
     def tick(self):
-        self.render()
+        self.render(self)

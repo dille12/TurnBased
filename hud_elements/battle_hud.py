@@ -42,12 +42,14 @@ def draw_HUD(game):
                 glitch=2 + game.vibration,
             )
         elif game.activated_object.type == "building":
+
             render_text_glitch(
                 game,
                 "Connected to network"
-                if game.activated_object.connected_to_base
-                or game.activated_object.name == "Base"
-                else "NOT CONNECTED TO NETWORK",
+                if game.activated_object.connected_building()
+                else
+                "NOT CONNECTED TO NETWORK" if game.activated_object.disabled_for_turns == 0
+                else f"DISABLED FOR {game.activated_object.disabled_for_turns} TURNS!",
                 [20, 102 - hud_transpose],
                 30,
                 color=game.activated_object.team.color,

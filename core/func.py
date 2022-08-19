@@ -15,6 +15,11 @@ def print_s(game, text_str, slot, color=[255, 255, 255], highlight=False):
 def towards_target_int(pos, target, panning=0.15):
     return pos + (target - pos) * panning
 
+def append_to_list(list, obj):
+    if obj not in list:
+        if not obj.get_circuit_breaker():
+            list.append(obj)
+
 
 def towards_target(pos, target, panning=0.15):
     return minus(

@@ -10,6 +10,10 @@ from game_objects.particles.ash import Ash
 from game_objects.particles.explosion_particles import ExplosionParticle
 import core.path_finding
 from _thread import *
+from game_objects.object_render import render
+
+from game_objects.abilities.get_abilities import *
+
 
 
 class Game_Object:
@@ -19,6 +23,8 @@ class Game_Object:
         self.game_ref = game
         self.size = [100 * (size[0]), 100 * (size[1])]
         self.slot_size = size
+
+        get_abilities(self)
 
         self.id = random.randint(0, 2**16)
 
@@ -35,11 +41,13 @@ class Game_Object:
         self.connected_to_base = False
         self.los_rad = 250
         self.finding_route = False
+        self.disabled_for_turns = 0
 
         self.shots_per_round = 1
         self.shots = 1
         self.act_gt = self.game_ref.GT(20, oneshot=True)
         self.requirement = None
+        self.render = render
 
     def __str__(self):
         return f"{self.classname} {self.team.name} {self.slot} {self.id}"
@@ -76,7 +84,7 @@ class Game_Object:
         for x in (
             x
             for x in self.game_ref.return_objects(["3.BUILDINGS", "4.NPCS"])
-            if x.team != self.team and x.team != BLACK and self.in_range(x)
+            if x.team != BLACK and self.in_range(x) #x.team != self.team and
         ):
             self.shootables.append(x)
 
@@ -116,7 +124,7 @@ class Game_Object:
         if self.hp <= 0:
             self.kill()
 
-    def highlight_enemies(self):
+    def highlight_enemies(self, outcome, text = "SHOOT"):
         for obj in self.shootables:
             x, y = obj.slot_to_pos()
             pygame.draw.rect(
@@ -135,7 +143,7 @@ class Game_Object:
 
                 core.func.render_text(
                     self.game_ref,
-                    "SHOOT R-CLICK",
+                    f"R-CLICK: {text}",
                     core.func.minus(self.game_ref.mouse_pos, [0, -100]),
                     30,
                     centerx=True,
@@ -143,13 +151,20 @@ class Game_Object:
                 )
 
                 if "mouse2" in self.game_ref.keypress:
-                    self.shots -= 1
-                    obj.hp_change(-50)
 
-                    self.exec_on_obj(obj.id, "hp_change(-50)")
+                    method = [method_name for method_name in dir(self) if outcome == getattr(self, method_name)][0]
+
+                    self.game_ref.datagatherer.data.append(
+                    f"self.game_ref.find_object_id({self.id}).{method}(self.game_ref.find_object_id({self.id}), self.game_ref.find_object_id({obj.id}))"
+                    )
+
+                    outcome(self, obj)
+
 
     def connected_building(self):
-        return self.connected_to_base or self.name == "Base"
+        return (self.connected_to_base or self.name == "Base") and self.disabled_for_turns == 0
+
+
 
     def create_spark(self):
         if random.uniform(0, 1) > 0.04 or not self.connected_building():
@@ -324,132 +339,7 @@ class Game_Object:
             c = self.size[0] / 2
         return self.game_ref.get_pos([slot[0] * 100+c, slot[1] * 100+c]) if not no_cam else [slot[0] * 100+c, slot[1] * 100+c]
 
-    def render(self):
-        if self.type == "wall":
-            return
-        if not self.check_los():
-            return
 
-        x, y = self.slot_to_pos()
-
-        if self.active:
-
-            smooth_lines_x = self.smoothing_inv * self.slot_size[0] / (3)
-            smooth_lines_y = self.smoothing_inv * self.slot_size[1] / (3)
-
-            lines_pos = (1 - self.smooth_value_raw) * 50 + 2
-
-            pygame.draw.line(
-                self.game_ref.screen,
-                [255, 255, 255],
-                [x - lines_pos, y - lines_pos],
-                [x - lines_pos + smooth_lines_x, y - lines_pos],
-                2,
-            )
-            pygame.draw.line(
-                self.game_ref.screen,
-                [255, 255, 255],
-                [x - lines_pos, y - lines_pos],
-                [x - lines_pos, y - lines_pos + smooth_lines_y],
-                2,
-            )
-
-            pygame.draw.line(
-                self.game_ref.screen,
-                [255, 255, 255],
-                [
-                    x + lines_pos + self.size[0] - smooth_lines_x,
-                    y + lines_pos + self.size[1],
-                ],
-                [x + lines_pos + self.size[0], y + lines_pos + self.size[1]],
-                2,
-            )
-            pygame.draw.line(
-                self.game_ref.screen,
-                [255, 255, 255],
-                [
-                    x + lines_pos + self.size[0],
-                    y + lines_pos + self.size[1] - smooth_lines_y,
-                ],
-                [x + lines_pos + self.size[0], y + lines_pos + self.size[1]],
-                2,
-            )
-
-            pygame.draw.rect(
-                self.game_ref.screen,
-                self.team.color,
-                [x + 5, y + 5, self.size[0] - 10, self.size[1] - 10],
-                4,
-            )
-            core.func.render_text(
-                self.game_ref,
-                self.name,
-                [x + self.size[0] / 2, y - 15],
-                20,
-                centerx=True,
-                color=self.team.color,
-            )
-            core.func.render_text(
-                self.game_ref,
-                f"HP:{self.hp}",
-                [x + self.size[0] / 2, y + self.size[1] + 20],
-                20,
-                centerx=True,
-                color=self.team.color,
-            )
-        else:
-            pygame.draw.rect(
-                self.game_ref.screen,
-                self.team.color,
-                [x + 5, y + 5, self.size[0] - 10, self.size[1] - 10],
-                1,
-            )
-        if self.image != None:
-            self.game_ref.screen.blit(self.image, [x, y])
-
-        if hasattr(self, "turn_movement"):
-            for x_1 in range(self.turn_movement):
-                pygame.draw.rect(
-                    self.game_ref.screen,
-                    self.team.color,
-                    [
-                        x + 5 + 92,
-                        y + 5 + x_1 * round(93 / self.movement_range),
-                        6,
-                        round(93 / self.movement_range) - 10,
-                    ],
-                )
-
-                pygame.draw.rect(
-                    self.game_ref.screen,
-                    core.func.mult(self.team.color, 0.5),
-                    [
-                        x + 5 + 92,
-                        y + 5 + x_1 * round(93 / self.movement_range),
-                        6,
-                        round(93 / self.movement_range) - 10,
-                    ],
-                    1,
-                )
-
-        if self.team != nature:
-            pygame.draw.rect(
-                self.game_ref.screen,
-                self.team.color,
-                [
-                    x + 5,
-                    y + 5 + self.size[1],
-                    round(self.size[0] * 0.95 * self.hp / self.hp_max),
-                    6,
-                ],
-            )
-
-            pygame.draw.rect(
-                self.game_ref.screen,
-                core.func.mult(self.team.color, 0.5),
-                [x + 3, y + 3 + self.size[1], round(self.size[0] * 0.95) + 4, 10],
-                1,
-            )
 
     def rotate(self, target):
 
@@ -558,7 +448,7 @@ class Game_Object:
         last_x_y = core.func.minus(self.slot.copy(), [0.5, 0.5])
         color = self.team.color.copy()
         turn = 0
-        for i, pos in enumerate(route):
+        for i, pos in enumerate(route[:self.battery_life+1]):
             turn_indicator = False
             if i == self.turn_movement+1 or (i > self.turn_movement and (i-1)%self.movement_range == 0):
 
@@ -624,7 +514,7 @@ class Game_Object:
                             "mouse2" in self.game_ref.keypress_held_down
                             and self.game_ref.own_turn
                         ):
-                            self.moving_route = self.route_to_pos
+                            self.moving_route = self.route_to_pos[:self.battery_life+1]
                             self.activate(False)
                             self.move_tick.value = self.move_tick.max_value
                             self.send_info(["moving_route"])
@@ -650,6 +540,24 @@ class Game_Object:
             op="-",
         )
 
+    def get_circuit_breaker(self):
+        if self.name == "Electric Tower" or self.name == "Base":
+            if self.short_circuited:
+                return True
+        return False
+
+    def toggle_circuits(self, boolean):
+
+        self.short_circuited = boolean
+
+        self.send_info(["short_circuited"])
+
+    def short_circuit_recovery(self):
+        if self.disabled_for_turns > 0:
+            self.disabled_for_turns -= 1
+
+
+
     def tick_buttons(self):
         if self.active:
             for x in self.buttons:
@@ -663,7 +571,7 @@ class Game_Object:
         if self.team == self.game_ref.player_team:
 
             if self.type == "building":
-                if not self.connected_to_base and not self.name == "Base":
+                if not self.connected_building():
                     return
 
             pygame.draw.circle(

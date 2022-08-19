@@ -113,8 +113,8 @@ class Saboteur(NPC):
                 3.5,
                 9,
                 self.team.color,
-                self.game_ref.images["shield"],
-                activator="defend",
+                self.game_ref.images["shortcircuit"],
+                activator="sabotage",
                 key_press="c",
             ),
         ]
@@ -247,7 +247,7 @@ class Base(Building):
         self.desc = "Base of operations for your team."
 
         super().__init__(game, team, name, slot, size=size, hp=hp, image=image)
-
+        self.short_circuited = True
         self.buttons = [
             Button(
                 self.game_ref,
@@ -281,12 +281,29 @@ class ElectricTower(Building):
         self.buildtime = 1
         self.energy_generation = 0
         self.energy_consumption = 0
+        self.short_circuited = False
 
         super().__init__(game, team, name, slot, size=size, hp=hp, image=image)
 
         self.los_rad = 0
 
         self.desc = "Conduit for electricity."
+
+        self.buttons = [
+            Button(
+                self.game_ref,
+                self,
+                0.5,
+                9,
+                self.team.color,
+                self.game_ref.images["circuitbreaker"],
+                activator="circuitbreaker",
+                active=False,
+                key_press="z",
+                togglable=True,
+                executable_function = self.toggle_circuits
+            ),
+        ]
 
     def copy(self):
         return ElectricTower(self.game_ref, self.team, self.slot)

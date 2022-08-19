@@ -19,12 +19,15 @@ class Button:
         argument=None,
         key_press="",
         scale=False,
+        togglable=False,
+        executable_function=False
     ):
 
         self.game_ref = game
         self.x = slotx / self.game_ref.size_conv[0]
         self.y = sloty / self.game_ref.size_conv[1]
         self.parent_ref = obj
+        self.exec_func = executable_function
         self.team = team
         if scale:
             self.image = pygame.transform.scale(image.copy(), [100, 100])
@@ -41,6 +44,7 @@ class Button:
         self.activator = activator
         self.key_press = key_press
         self.button_sizex, self.button_sizey = self.image.get_size()
+        self.togglable = togglable
 
     def tick(self):
 
@@ -95,6 +99,12 @@ class Button:
                         for x in self.parent_ref.buttons:
                             if x != self:
                                 x.active = False
+                elif self.togglable:
+                    self.active = False
+
+            if self.exec_func:
+                self.exec_func(self.active)
+
             try:
                 self.parent_ref.check_mode()
             except:

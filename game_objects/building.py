@@ -314,7 +314,7 @@ class Building(Game_Object):
             if "esc" in self.game_ref.keypress:
                 self.activate(False)
 
-        self.render()
+        self.render(self)
         self.cable_send()
         self.tick_buttons()
         self.tick_queue()

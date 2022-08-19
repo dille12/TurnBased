@@ -38,12 +38,12 @@ class Cable(Game_Object):
             x.render(self.game_ref.screen, self.team, color_override)
 
     def update(self):
-        if self.start_obj.connected_to_base and not self.end_obj.connected_to_base:
+        if self.start_obj.connected_to_base and not self.end_obj.connected_to_base and self.end_obj.disabled_for_turns==0:
             self.end_obj.connected_to_base = True
             print(self.end_obj)
             self.game_ref.connected_in_scan += 1
             self.connected = True
-        elif self.end_obj.connected_to_base and not self.start_obj.connected_to_base:
+        elif self.end_obj.connected_to_base and not self.start_obj.connected_to_base and self.start_obj.disabled_for_turns==0:
             self.start_obj.connected_to_base = True
             print(self.start_obj)
             self.game_ref.connected_in_scan += 1
@@ -196,13 +196,15 @@ class Stick:
 
             if self.start_object:
 
-                for i in range(2, 4):
-                    self.start_object.gen_spark(self.start_object.slot_to_pos_center())
+                if self.start_object.disabled_for_turns == 0:
 
-                for x in self.start_object.connected_cables:
-                    if x == self or x.i != 0:
-                        continue
-                    x.i = 4
+                    for i in range(2, 4):
+                        self.start_object.gen_spark(self.start_object.slot_to_pos_center())
+
+                    for x in self.start_object.connected_cables:
+                        if x == self or x.i != 0:
+                            continue
+                        x.i = 4
 
         if self.i > 0:
             self.i -= 1

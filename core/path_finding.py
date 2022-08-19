@@ -1,11 +1,10 @@
-from numba import jit
 import numpy as np
 import time
 import math
 import core.func
 
 def compute(parent, pos, target_pos, occupied, map_size):
-    
+
     start_time = time.time()
     if pos == target_pos:
         #parent.target_pos = target_pos
