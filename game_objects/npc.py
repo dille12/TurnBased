@@ -123,6 +123,9 @@ class NPC(Game_Object):
                     self.render_long_range()
 
             elif self.mode == "attack" and self.active and self.shots > 0:
+
+                self.scan_enemies()
+
                 x, y = self.slot_to_pos_c(minus(self.slot, [-self.range, -self.range]))
                 size = (1 + self.range * 2) * self.game_ref.ss
 
@@ -132,16 +135,17 @@ class NPC(Game_Object):
 
 
 
-                self.highlight_enemies(self.attack, text = "ATTACK")
+                self.tick_action(self.attack, text = "ATTACK", argument = round(-50 * (self.battery_life/self.battery_life_max)))
 
             elif self.mode == "sabotage" and self.active and self.shots > 0:
+                self.scan_enemies(include = {"type" : "building"}, exclude = {"name" : "Base"})
                 x, y = self.slot_to_pos_c(minus(self.slot, [-self.range, -self.range]))
                 size = (1 + self.range * 2) * self.game_ref.ss
                 pygame.draw.rect(
                     self.game_ref.screen, [255, 0, 0], [x, y, size, size], 2
                 )
 
-                self.highlight_enemies(self.shortcircuit, text = "SHORTCIRCUIT")
+                self.tick_action(self.shortcircuit, text = "SHORTCIRCUIT", argument = round(random.uniform(0, (self.battery_life/self.battery_life_max))))
 
 
 
@@ -177,5 +181,6 @@ class NPC(Game_Object):
         else:
 
             self.tick_buttons()
+        self.tick_statuses()
 
         self.delete()

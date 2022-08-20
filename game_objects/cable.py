@@ -202,9 +202,10 @@ class Stick:
                         self.start_object.gen_spark(self.start_object.slot_to_pos_center())
 
                     for x in self.start_object.connected_cables:
-                        if x == self or x.i != 0:
-                            continue
-                        x.i = 4
+                        if x.parent_cable.start_obj.disabled_for_turns == 0 and x.parent_cable.end_obj.disabled_for_turns == 0:
+                            if x == self or x.i != 0:
+                                continue
+                            x.i = 4
 
         if self.i > 0:
             self.i -= 1

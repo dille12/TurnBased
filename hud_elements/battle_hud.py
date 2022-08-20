@@ -135,7 +135,7 @@ def draw_HUD(game):
     for i, image in enumerate([game.images["iridium"], game.images["uranium"], game.images["tungsten"], game.images["gallium"]]):
         blit_glitch(game, image, [x - 600 + i *67+30, y - 90])
 
-        color, text = [
+        color1, text = [
         [[255, 0, 0], "Iridium"],
         [[0, 255, 0], "Uranium"],
         [[51, 204, 255], "Tungsten"],
@@ -149,7 +149,7 @@ def draw_HUD(game):
         f"{game.ores[text]}",
         [x - 600 + i *69+32, y - 36],
         28,
-        color=color,
+        color=color1,
         glitch = 1 + game.vibration
     )
 

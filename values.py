@@ -8,6 +8,13 @@ GREEN = [153, 255, 51]
 YELLOW = [255, 204, 102]
 CYAN = [51, 204, 204]
 
+ore_colorkeys = {
+"Iridium" : [255, 0, 0],
+"Uranium" : [0, 255, 0],
+"Tungsten" : [51, 204, 255],
+"Gallium" : [255, 102, 0],
+}
+
 blue_t = Player(BLUE, "", "blue_t")
 red_t = Player(RED, "", "red_t")
 green_t = Player(GREEN, "", "green_t")

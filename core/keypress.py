@@ -24,6 +24,8 @@ def key_press_manager(obj):
         [pygame.K_z, "z"],
         [pygame.K_1, "1"],
         [pygame.K_2, "2"],
+        [pygame.K_3, "3"],
+        [pygame.K_4, "4"],
         [pygame.K_RETURN, "enter"],
         [pygame.K_BACKSPACE, "backspace"],
         [pygame.K_ESCAPE, "esc"],

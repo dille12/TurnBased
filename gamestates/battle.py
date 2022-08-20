@@ -70,6 +70,7 @@ class Battle:
         # self.game_ref.camera_pos = minus(self.game_ref.mouse_pos,[0.3,0.3], op = "*")
         self.game_ref.screen.fill(BLACK)
         self.game_ref.renderobjects()
+        self.game_ref.tick_animations()
         draw_HUD(self.game_ref)
         self.game_ref.own_turn = False
         if self.game_ref.turn == self.game_ref.player_team:

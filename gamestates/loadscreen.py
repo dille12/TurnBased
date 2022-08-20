@@ -9,7 +9,7 @@ class Loadscreen:
     def __init__(self, game):
         self.game_ref = game
 
-        self.LOADABLE_OBJECTS = 57 ## UPDATE AFTER ADDING FILES
+        self.LOADABLE_OBJECTS = 65 ## UPDATE AFTER ADDING FILES
 
         start_new_thread(load, (self.game_ref,))
 

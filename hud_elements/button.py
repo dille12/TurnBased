@@ -1,6 +1,7 @@
 import core.image_transform
 import core.func
 import pygame
+from values import *
 
 
 class Button:
@@ -57,28 +58,51 @@ class Button:
             ],
         )
 
-        if inside and self.argument != None and not isinstance(self.argument, str):
-            core.func.render_text(
-                self.game_ref,
-                self.argument.name,
-                core.func.minus(self.game_ref.mouse_pos, [100, 50]),
-                40,
-                color=self.team,
-            )
-            core.func.render_text(
-                self.game_ref,
-                self.argument.desc,
-                core.func.minus(self.game_ref.mouse_pos, [100, 100]),
-                20,
-                color=self.team,
-            )
-            core.func.render_text(
-                self.game_ref,
-                f"Energy usage: {self.argument.energy_consumption}",
-                core.func.minus(self.game_ref.mouse_pos, [100, 130]),
-                30,
-                color=self.team,
-            )
+        if inside:
+            if not isinstance(self.argument, str) and self.argument != None:
+                core.func.render_text(
+                    self.game_ref,
+                    self.argument.name,
+                    core.func.minus(self.game_ref.mouse_pos, [100, 50]),
+                    40,
+                    color=self.team,
+                )
+                core.func.render_text(
+                    self.game_ref,
+                    self.argument.desc,
+                    core.func.minus(self.game_ref.mouse_pos, [100, 100]),
+                    20,
+                    color=self.team,
+                )
+                core.func.render_text(
+                    self.game_ref,
+                    f"Energy usage: {self.argument.energy_consumption}",
+                    core.func.minus(self.game_ref.mouse_pos, [100, 130]),
+                    30,
+                    color=self.team,
+                )
+                if hasattr(self.argument, "ore_cost"):
+                    y_pos = 160
+                    for ore in self.argument.ore_cost:
+                        if self.argument.ore_cost[ore] != 0:
+                            core.func.render_text(
+                                self.game_ref,
+                                f"{ore} usage: {self.argument.ore_cost[ore]}",
+                                core.func.minus(self.game_ref.mouse_pos, [100, y_pos]),
+                                30,
+                                color=ore_colorkeys[ore],
+                            )
+                            y_pos += 30
+            elif self.activator != "":
+                core.func.render_text(
+                    self.game_ref,
+                    self.activator,
+                    core.func.minus(self.game_ref.mouse_pos, [100, -50]),
+                    40,
+                    color=self.team,
+                )
+
+
 
         if (
             (inside and "mouse0" in self.game_ref.keypress)

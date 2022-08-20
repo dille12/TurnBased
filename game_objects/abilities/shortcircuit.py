@@ -1,5 +1,5 @@
 
-def shortcircuit(self, target_object):
+def shortcircuit(self, target_object, argument):
     self.shots -= 1
     self.game_ref.vibration = 10
     list_of_objects = self.game_ref.scan_from_building(target_object)

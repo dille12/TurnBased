@@ -30,7 +30,6 @@ class Particle:
             self.kill()
 
     def vibrate(self, amount=2):
-
         self.pos += np.array([randint(-amount, amount), randint(-amount, amount)])
 
     def render(self):

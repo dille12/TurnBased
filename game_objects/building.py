@@ -298,7 +298,8 @@ class Building(Game_Object):
         if self.name == "Base":
             if self.cable_send_tick.tick():
                 for x in self.connected_cables:
-                    x.i = 30
+                    if x.parent_cable.start_obj.disabled_for_turns == 0 and x.parent_cable.end_obj.disabled_for_turns == 0:
+                        x.i = 30
                 # if self.own():
                 #     self.game_ref.play_sound("base_beep")
 
@@ -322,4 +323,5 @@ class Building(Game_Object):
         self.create_cable()
         self.create_spark()
         self.tick_animation()
+        self.tick_statuses()
         self.delete()

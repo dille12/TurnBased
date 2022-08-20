@@ -348,6 +348,18 @@ class Barracks(Building):
                 oneshot_func=self.purchase,
                 argument=Saboteur(self.game_ref, self.team, [-1, -1]),
             ),
+            Button(
+                self.game_ref,
+                self,
+                0.5,
+                5,
+                self.team.color,
+                self.game_ref.images["PLACEHOLDER"],
+                key_press="3",
+                oneshot=True,
+                oneshot_func=self.purchase,
+                argument=MissileLauncher(self.game_ref, self.team, [-1, -1]),
+            ),
         ]
 
         self.desc = "Produces military units."
@@ -426,7 +438,7 @@ class TransportableBomb(NPC):  ##URANIUM, GALLIUM
     def __init__(self, game, team, slot):
         hp = 50
         name = "Transportable Bomb"
-        image = game.images["PLACHEHOLDER"].copy()
+        image = game.images["PLACEHOLDER"].copy()
         self.select_sound = game.sounds["select_tower"]
         size = [1, 1]
         self.range = 0
@@ -444,16 +456,19 @@ class MissileLauncher(NPC): ### URANIUM
     def __init__(self, game, team, slot):
         hp = 25
         name = "Missile Launcher"
-        image = game.images["PLACHEHOLDER"].copy()
+        image = game.images["PLACEHOLDER"].copy()
         self.select_sound = game.sounds["select_tower"]
         size = [1, 1]
         self.range = 0
         self.buildtime = 4
         self.energy_generation = 0
         self.energy_consumption = 3
+        movement_range = 2
         self.ore_cost = {"Uranium" : 1}
         self.desc = "Fires small-scale missiles armed with uranium tipped warheads to a detected tile."
-        super().__init__(game, team, name, slot, size=size, hp=hp, image=image)
+        super().__init__(
+            game, team, name, slot, movement_range=movement_range, hp=hp, image=image
+        )
 
     def copy(self):
         return MissileLauncher(self.game_ref, self.team, self.slot)
@@ -461,7 +476,7 @@ class PhaseCharger(NPC): ### GALLIUM, TUNGSTEN
     def __init__(self, game, team, slot):
         hp = 25
         name = "Phase Charger"
-        image = game.images["PLACHEHOLDER"].copy()
+        image = game.images["PLACEHOLDER"].copy()
         self.select_sound = game.sounds["select_tower"]
         size = [1, 1]
         self.range = 0
@@ -480,7 +495,7 @@ class CombatMech(NPC): ### TUNGSTEN
     def __init__(self, game, team, slot):
         hp = 250
         name = "Combat Mech"
-        image = game.images["PLACHEHOLDER"].copy()
+        image = game.images["PLACEHOLDER"].copy()
         self.select_sound = game.sounds["select_tower"]
         size = [1, 1]
         self.range = 0
@@ -499,7 +514,7 @@ class Interceptor(NPC): ### GALLIUM
     def __init__(self, game, team, slot):
         hp = 25
         name = "Interceptor"
-        image = game.images["PLACHEHOLDER"].copy()
+        image = game.images["PLACEHOLDER"].copy()
         self.select_sound = game.sounds["select_tower"]
         size = [1, 1]
         self.range = 0
@@ -517,7 +532,7 @@ class FissileCannon(NPC): ##TUNGSTEN, URANIUM
     def __init__(self, game, team, slot):
         hp = 25
         name = "Fissile Cannon"
-        image = game.images["PLACHEHOLDER"].copy()
+        image = game.images["PLACEHOLDER"].copy()
         self.select_sound = game.sounds["select_tower"]
         size = [1, 1]
         self.range = 0
@@ -536,7 +551,7 @@ class Railgunner(NPC): ### TUNGSTEN, URANIUM, GALLIUM
     def __init__(self, game, team, slot):
         hp = 25
         name = "Railgunner"
-        image = game.images["PLACHEHOLDER"].copy()
+        image = game.images["PLACEHOLDER"].copy()
         self.select_sound = game.sounds["select_tower"]
         size = [1, 1]
         self.range = 0

@@ -75,11 +75,17 @@ def render(self):
             color=self.team.color,
         )
     else:
+        color = self.team.color
+        if self.type == "building" and self.own():
+            if not self.connected_building():
+                color = [155,0,0]
+
+
         pygame.draw.rect(
             self.game_ref.screen,
-            self.team.color,
+            color,
             [x + 5, y + 5, self.size[0] - 10, self.size[1] - 10],
-            1,
+            2,
         )
     if self.image != None:
         self.game_ref.screen.blit(self.image, [x, y])

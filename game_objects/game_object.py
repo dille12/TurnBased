@@ -13,6 +13,7 @@ from _thread import *
 from game_objects.object_render import render
 
 from game_objects.abilities.get_abilities import *
+from hud_elements.unit_status import UnitStatus
 
 
 
@@ -42,6 +43,7 @@ class Game_Object:
         self.los_rad = 250
         self.finding_route = False
         self.disabled_for_turns = 0
+        self.unitstatuses = []
 
         self.shots_per_round = 1
         self.shots = 1
@@ -74,19 +76,32 @@ class Game_Object:
         return free_spots
 
     def in_range(self, object):
-        return (
-            abs(self.slot[0] - object.slot[0]) <= self.range
-            and abs(self.slot[1] - object.slot[1]) <= self.range
-        )
+        for x_s in range(object.slot_size[0]):
+            for y_s in range(object.slot_size[1]):
+                if abs(self.slot[0] - object.slot[0] + x_s) <= self.range and abs(self.slot[1] - object.slot[1] + y_s) <= self.range:
+                    return True
+        return False
 
-    def scan_enemies(self):
+    def enemy_check(self, object, dict, dict2):
+        for x in dict:
+            if object.__dict__[x] != dict[x]:
+                return False
+        for x in dict2:
+            if object.__dict__[x] == dict2[x]:
+                return False
+        return True
+
+
+
+    def scan_enemies(self, include = {}, exclude = {}):
         self.shootables = []
         for x in (
             x
             for x in self.game_ref.return_objects(["3.BUILDINGS", "4.NPCS"])
             if x.team != BLACK and self.in_range(x) #x.team != self.team and
         ):
-            self.shootables.append(x)
+            if self.enemy_check(x, include, exclude):
+                self.shootables.append(x)
 
     def set_dict(self, list):
         for x in list:
@@ -120,11 +135,18 @@ class Game_Object:
         return [self.slot[0] + self.slot_size[0]/2, self.slot[1] + self.slot_size[1]/2]
 
     def hp_change(self, amount):
+
+        UnitStatus(self, f"{amount}HP!",20, [255,0,0])
+
         self.hp += amount
         if self.hp <= 0:
             self.kill()
 
-    def highlight_enemies(self, outcome, text = "SHOOT"):
+    def tick_statuses(self):
+        for x in self.unitstatuses:
+            x.tick()
+
+    def tick_action(self, outcome, text = "SHOOT", argument = 0):
         for obj in self.shootables:
             x, y = obj.slot_to_pos()
             pygame.draw.rect(
@@ -155,10 +177,10 @@ class Game_Object:
                     method = [method_name for method_name in dir(self) if outcome == getattr(self, method_name)][0]
 
                     self.game_ref.datagatherer.data.append(
-                    f"self.game_ref.find_object_id({self.id}).{method}(self.game_ref.find_object_id({self.id}), self.game_ref.find_object_id({obj.id}))"
+                    f"self.game_ref.find_object_id({self.id}).{method}(self.game_ref.find_object_id({self.id}), self.game_ref.find_object_id({obj.id}), argument = {argument})"
                     )
 
-                    outcome(self, obj)
+                    outcome(self, obj, argument)
 
 
     def connected_building(self):
@@ -166,8 +188,8 @@ class Game_Object:
 
 
 
-    def create_spark(self):
-        if random.uniform(0, 1) > 0.04 or not self.connected_building():
+    def create_spark(self, force = False):
+        if (random.uniform(0, 1) > 0.04 or (not self.connected_building() or self.type == "npc")) or force:
             return
         token = random.randint(0, 1)
         if token:
@@ -397,8 +419,7 @@ class Game_Object:
 
             self.select_sound.stop()
             self.select_sound.play()
-            if self.range != 0:
-                self.scan_enemies()
+
             self.game_ref.activated_object = self
         self.active = boolean
 
@@ -455,6 +476,16 @@ class Game_Object:
                 color = core.func.mult(color,0.8)
                 turn += 1
                 turn_indicator = True
+
+            x3, y3 = self.slot_to_pos_c(pos)
+
+            pygame.draw.rect(
+                self.game_ref.screen,
+                color if i+1 != len(route) else [255,255,255],
+                [x3+5,y3+5,90,90],
+                1 if i+1 != len(route) else 3
+            )
+
             pos = core.func.minus(pos.copy(), [0.5, 0.5])
 
             x1, y1 = self.slot_to_pos_c(last_x_y)
@@ -463,6 +494,7 @@ class Game_Object:
             origin = [min([x1,x2])-5, min([y1,y2])-5]
 
             surf = pygame.Surface([abs(x1-x2)+10, abs(y1-y2)+10], pygame.SRCALPHA, 32).convert_alpha()
+
 
 
             pygame.draw.line(
@@ -549,6 +581,11 @@ class Game_Object:
     def toggle_circuits(self, boolean):
 
         self.short_circuited = boolean
+
+        if boolean:
+            self.energy_consumption = 3
+        else:
+            self.energy_consumption = 0
 
         self.send_info(["short_circuited"])
 

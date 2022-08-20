@@ -47,6 +47,7 @@ class Game:
 
         self.resolution = resolution
         self.loading = ""
+        self.animations = []
 
         self.generation_overflow_tick = self.GT(30)
 
@@ -404,6 +405,10 @@ class Game:
             ):
                 return x
         return False
+
+    def tick_animations(self):
+        for x in self.animations:
+            x.tick()
 
     def calc_energy(self):
         self.player_team.energy_consumption = 0
