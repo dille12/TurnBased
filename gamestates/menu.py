@@ -17,6 +17,8 @@ import random
 import ast
 import gamestates.battle
 import math
+t1 = time.time()
+beat_index = 0
 
 
 class Menu:
@@ -28,9 +30,13 @@ class Menu:
         self.ip_box = TextBox(
             self.game_ref, [250, 70], self.game_ref.own_ip, secret=False
         )
+        self.t1 = time.time()
+        self.beat_index = 0
+
         self.threading = False
         self.glitch_amount = 2
         self.menu_text = "MAIN MENU"
+        self.red = 0
         self.button_click_tick = self.game_ref.GT(30, oneshot=True)
         self.host = Button(
             self.game_ref,
@@ -79,9 +85,14 @@ class Menu:
         self.game_ref.network = None
         self.game_ref.hosting_game = False
 
-        pygame.mixer.music.load("sounds/music/game_loop.mp3")
+        song = "menu_loop"
+
+        pygame.mixer.music.load(f"sounds/music/{song}.wav")
         pygame.mixer.music.set_volume(self.game_ref.music_volume)
-        pygame.mixer.music.play(-1)
+
+
+        with open(f"sounds/music/{song}.wav_timestamps.txt", 'r') as f:
+            self.time_stamps = ast.literal_eval(f.read())
 
     def lobby_host(self, thread, ip):
         print("SERVER STARTING")
@@ -198,6 +209,14 @@ class Menu:
             self.smoothing = 0
 
     def tick(self):
+
+        if not pygame.mixer.music.get_busy():
+            pygame.mixer.music.play()
+            self.t1 = time.time()
+            self.beat_index = 0
+
+
+
         self.tick_recovery()
         key_press_manager(self.game_ref)
         self.game_ref.screen.fill(BLACK)
@@ -231,7 +250,7 @@ class Menu:
         else:
             self.error_time = time.time()
         if "mouse0" in self.game_ref.keypress:
-            self.glitch_amount = 30
+
             self.button_click_tick.value = 0
 
         render_text_glitch(
@@ -241,6 +260,17 @@ class Menu:
             100,
             centerx=True,
             glitch=self.glitch_amount,
+            color = [255, 255-self.red, 255-self.red]
         )
+
+        if self.beat_index < len(self.time_stamps):
+            if time.time() - self.t1 > self.time_stamps[self.beat_index]:
+                self.beat_index += 1
+
+                self.glitch_amount = random.randint(15,20)
+                self.red = 100
+
+
         if self.glitch_amount >= 4:
             self.glitch_amount -= 1
+        self.red = self.red * 0.8

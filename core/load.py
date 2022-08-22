@@ -8,6 +8,7 @@ from game_objects.mine import *
 import gamestates.menu
 from hud_elements.textbox import TextBox
 import time
+import sounds.music.beatmap
 
 
 def load(game):
@@ -33,6 +34,8 @@ def load(game):
         game.render_layers["1.BOTTOM"].append(Wall(game, nature, "Wall", x))
 
     game.chat.chatbox = TextBox(game, [game.resolution[0]-200,90], "", size = 35)
+
+    sounds.music.beatmap.compute(game, path = "/sounds/music/")
 
     game.loading = "Complete"
     print(f"LOADABLE_OBJECTS: {game.load_i}")

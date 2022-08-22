@@ -148,7 +148,15 @@ class Game:
         for x in self.return_objects():
             if hasattr(x, "short_circuit_recovery"):
                 x.short_circuit_recovery()
+
+
+
             if hasattr(x, "turn_movement"):
+                if hasattr(x, "battery_life"):
+                    x.battery_life += x.turn_movement
+                    if x.battery_life > x.battery_life_max:
+                        x.battery_life = x.battery_life_max
+                        
                 x.turn_movement = x.movement_range
             if hasattr(x, "shots"):
                 x.shots = x.shots_per_round
@@ -170,10 +178,7 @@ class Game:
                     x.stashed_route = []
                     x.send_info(["moving_route", "turn_movement"])
 
-                elif x.turn_movement > 0:
-                    x.battery_life += x.turn_movement
-                    if x.battery_life > x.battery_life_max:
-                        x.battery_life = x.battery_life_max
+
 
 
         for i, x in enumerate(self.connected_players):

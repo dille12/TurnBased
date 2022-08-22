@@ -116,8 +116,11 @@ class NPC(Game_Object):
                             self.route_to_pos = []
                             #self.activate(False)
                             self.send_info(["moving_route", "turn_movement"])
+                            self.render_long_routes = False
                         else:
                             self.render_long_routes = False
+                            self.moving_route = []
+                            self.route_to_pos = []
 
 
                     self.render_long_range()
