@@ -74,6 +74,7 @@ class Game:
         self.notification = ""
         self.notification_color = [255, 255, 255]
         self.vibration = 0
+        self.ping = [0]
 
         self.qsc = 1920 / resolution[0]
 
@@ -156,7 +157,7 @@ class Game:
                     x.battery_life += x.turn_movement
                     if x.battery_life > x.battery_life_max:
                         x.battery_life = x.battery_life_max
-                        
+
                 x.turn_movement = x.movement_range
             if hasattr(x, "shots"):
                 x.shots = x.shots_per_round

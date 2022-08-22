@@ -81,3 +81,10 @@ class Battle:
 
         print_s(self.game_ref, f"FPS:{self.game_ref.fps}", 1)
         print_s(self.game_ref, f"IDLE:{self.game_ref.idle}%", 2)
+        ping = 0
+        for i in self.game_ref.ping:
+            ping += i
+
+        ping /= len(self.game_ref.ping)
+
+        print_s(self.game_ref, f"PING:{round(ping*1000)}ms", 3)

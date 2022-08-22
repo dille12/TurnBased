@@ -58,5 +58,7 @@ class DataGatherer:
         if reply.strip(" ") not in ["ok", "/", "/ok", "/ok/", "ok/", ""]:
             print("Received packet:\n", reply)
             self.parse(reply)
-
+        self.game_ref.ping.append(time.time() - t)
+        if len(self.game_ref.ping) > 10:
+            self.game_ref.ping.remove(self.game_ref.ping[0])
         self.gathering = False
